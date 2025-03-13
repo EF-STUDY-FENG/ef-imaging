@@ -25,7 +25,7 @@ PsychDefaultSetup(2);
 screen_to_display = max(Screen('Screens'));
 % set the start up screen to black
 old_visdb = Screen('Preference', 'VisualDebugLevel', 1);
-% do not skip synchronization test to make sure timing is accurate
+% disable sync tests if error occurs
 old_sync = Screen('Preference', 'SkipSyncTests', double(opts.SkipSyncTests));
 % use FTGL text plugin
 old_text_render = Screen('Preference', 'TextRenderer', 1);
@@ -148,6 +148,7 @@ try
             valid_names = {'left', 'right'};
             valid_codes = cellfun(@(x) keys.(x), valid_names);
             if sum(resp_code) > 1 || (~any(resp_code(valid_codes)))
+                % pressed more than one key or invalid key
                 resp = 'invalid';
             else
                 resp = valid_names{valid_codes == find(resp_code)};
