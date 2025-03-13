@@ -25,7 +25,7 @@ PsychDefaultSetup(2);
 screen = max(Screen('Screens'));
 % set the start up screen to black
 old_visdb = Screen('Preference', 'VisualDebugLevel', 1);
-% disable sync tests if error occurs
+% sync tests are recommended but may fail
 old_sync = Screen('Preference', 'SkipSyncTests', double(opts.SkipSyncTests));
 % use FTGL text plugin
 old_text_render = Screen('Preference', 'TextRenderer', 1);
