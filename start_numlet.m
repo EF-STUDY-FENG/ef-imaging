@@ -22,7 +22,7 @@ timing = struct( ...
 % setup default level of 2
 PsychDefaultSetup(2);
 % screen selection
-screen_to_display = max(Screen('Screens'));
+screen = max(Screen('Screens'));
 % set the start up screen to black
 old_visdb = Screen('Preference', 'VisualDebugLevel', 1);
 % disable sync tests if error occurs
@@ -30,7 +30,7 @@ old_sync = Screen('Preference', 'SkipSyncTests', double(opts.SkipSyncTests));
 % use FTGL text plugin
 old_text_render = Screen('Preference', 'TextRenderer', 1);
 % set priority to the top
-old_pri = Priority(MaxPriority(screen_to_display));
+old_pri = Priority(MaxPriority(screen));
 % PsychDebugWindowConfiguration([], 0.1);
 
 % ---- keyboard settings ----
@@ -45,8 +45,7 @@ keys = struct( ...
 early_exit = false;
 try
     % open a window and set its background color as black
-    [window_ptr, window_rect] = PsychImaging('OpenWindow', ...
-        screen_to_display, BlackIndex(screen_to_display));
+    [window_ptr, window_rect] = PsychImaging('OpenWindow', screen, BlackIndex(screen));
     [xcenter, ycenter] = RectCenter(window_rect);
     % disable character input and hide mouse cursor
     ListenChar(2);
