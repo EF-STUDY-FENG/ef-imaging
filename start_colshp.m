@@ -8,7 +8,7 @@ status = 0;
 exception = [];
 
 % ---- configure sequence ----
-config = readtable(fullfile("MateShiftColor", "prac.xlsx"));
+config = readtable(fullfile("colshp_config", "prac.xlsx"));
 rec = config;
 rec.onset_real = nan(height(config), 1);
 rec.resp_raw = cell(height(config), 1);
