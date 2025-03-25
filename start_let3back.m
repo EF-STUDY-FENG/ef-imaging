@@ -1,4 +1,4 @@
-function [rec, status, exception] = start_nback(opts)
+function [rec, accu, status, exception] = start_let3back(opts)
 arguments
     opts.SkipSyncTests (1, 1) {mustBeNumericOrLogical} = false
 end
@@ -8,12 +8,13 @@ status = 0;
 exception = [];
 
 % ---- configure sequence ----
-config = readtable(fullfile("config", "nback.xlsx"));
+config = readtable(fullfile("config", "let3back.xlsx"));
 rec = config;
 rec.onset_real = nan(height(config), 1);
 rec.resp_raw = cell(height(config), 1);
 rec.resp = cell(height(config), 1);
 rec.rt = nan(height(config), 1);
+rec.cort = nan(height(config),1);
 timing = struct( ...
     'iti', 2.25, ... % inter-trial-interval
     'tdur', 0.75); % trial duration
@@ -165,8 +166,9 @@ try
         rec.resp_raw{trial_order} = resp_raw;
         rec.resp{trial_order} = resp;
         rec.rt(trial_order) = rt;
+        rec.cort(trial_order) = strcmp(rec.cresp(trial_order), resp);
     end
-
+    accu = sum(rec{:, 8} == 1) / (height(config)-3);
 catch exception
     status = -1;
 end
