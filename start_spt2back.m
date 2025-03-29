@@ -167,8 +167,8 @@ try
         end
 
         accu=length(find(rec(:,4)==1 & rec(:,2)==block))/(p.nTrialPerBlock-2);
-        disp(accu);
-        disp(rec);
+        % disp(accu);
+        % disp(rec);
         str = '休息一下\n按键继续.';
         DrawFormattedText(window_ptr, double(str), 'center', 'center', WhiteIndex(window_ptr));
         Screen('Flip', window_ptr);
