@@ -1,14 +1,20 @@
-function [rec, accu, status, exception] = start_let3back(opts)
-arguments
-    opts.SkipSyncTests (1, 1) {mustBeNumericOrLogical} = false
-end
+function [accu, rec, status, exception] = start_let3back(run, window_ptr, window_rect, prac)
+% arguments
+%     opts.SkipSyncTests (1, 1) {mustBeNumericOrLogical} = false
+% end
 
 % ---- configure exception ----
 status = 0;
 exception = [];
+accu = 0.00;
 
 % ---- configure sequence ----
-config = readtable(fullfile("config", "let3back.xlsx"));
+if nargin > 3 && prac == 1
+    config = readtable(fullfile("config_prac", "let3back_prac.xlsx"));
+else
+    TaskFile = sprintf('let3back_run%d.xlsx', run);
+    config = readtable(fullfile("config/let3back_config", TaskFile));
+end
 rec = config;
 rec.onset_real = nan(height(config), 1);
 rec.resp_raw = cell(height(config), 1);
@@ -16,23 +22,23 @@ rec.resp = cell(height(config), 1);
 rec.rt = nan(height(config), 1);
 rec.cort = nan(height(config),1);
 timing = struct( ...
-    'iti', 2.25, ... % inter-trial-interval
-    'tdur', 0.75); % trial duration
+    'iti', 0.5, ... % inter-trial-interval
+    'tdur', 1.5); % trial duration
 
-% ---- configure screen and window ----
-% setup default level of 2
-PsychDefaultSetup(2);
-% screen selection
-screen = max(Screen('Screens'));
-% set the start up screen to black
-old_visdb = Screen('Preference', 'VisualDebugLevel', 1);
-% sync tests are recommended but may fail
-old_sync = Screen('Preference', 'SkipSyncTests', double(opts.SkipSyncTests));
-% use FTGL text plugin
-old_text_render = Screen('Preference', 'TextRenderer', 1);
-% set priority to the top
-old_pri = Priority(MaxPriority(screen));
-% PsychDebugWindowConfiguration([], 0.1);
+% % ---- configure screen and window ----
+% % setup default level of 2
+% PsychDefaultSetup(2);
+% % screen selection
+% screen = max(Screen('Screens'));
+% % set the start up screen to black
+% old_visdb = Screen('Preference', 'VisualDebugLevel', 1);
+% % sync tests are recommended but may fail
+% old_sync = Screen('Preference', 'SkipSyncTests', double(opts.SkipSyncTests));
+% % use FTGL text plugin
+% old_text_render = Screen('Preference', 'TextRenderer', 1);
+% % set priority to the top
+% old_pri = Priority(MaxPriority(screen));
+% % PsychDebugWindowConfiguration([], 0.1);
 
 % ---- keyboard settings ----
 keys = struct( ...
@@ -45,18 +51,18 @@ keys = struct( ...
 % the flag to determine if the experiment should exit early
 early_exit = false;
 try
-    % open a window and set its background color as black
-    [window_ptr, window_rect] = PsychImaging('OpenWindow', screen, BlackIndex(screen));
+    % % open a window and set its background color as black
+    % [window_ptr, window_rect] = PsychImaging('OpenWindow', screen, BlackIndex(screen));
     [xcenter, ycenter] = RectCenter(window_rect);
-    % disable character input and hide mouse cursor
-    ListenChar(2);
-    HideCursor;
-    % set blending function
-    Screen('BlendFunction', window_ptr, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    % set default font name
-    Screen('TextFont', window_ptr, 'SimHei');
-    Screen('TextSize', window_ptr, round(0.06 * RectHeight(window_rect)));
-    % get inter flip interval
+    % % disable character input and hide mouse cursor
+    % ListenChar(2);
+    % HideCursor;
+    % % set blending function
+    % Screen('BlendFunction', window_ptr, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    % % set default font name
+    % Screen('TextFont', window_ptr, 'SimHei');
+    % Screen('TextSize', window_ptr, round(0.06 * RectHeight(window_rect)));
+    % % get inter flip interval
     ifi = Screen('GetFlipInterval', window_ptr);
 
     % ---- configure stimuli ----
@@ -64,26 +70,27 @@ try
     stim_window = [0, 0, RectWidth(window_rect), ratio_size * RectHeight(window_rect)];
 
     % display welcome/instr screen and wait for a press of 's' to start
-    instr = '按S键开始';
-    DrawFormattedText(window_ptr, double(instr), 'center', 'center', WhiteIndex(window_ptr));
-    Screen('Flip', window_ptr);
-    % solve keystroke bug 
-     [ keyIsDown, ~, keyCode ] = KbCheck;
-    keyCode = find(keyCode, 1);
-    if keyIsDown
-        ignoreKey=keyCode;
-        DisableKeysForKbCheck(ignoreKey);
-    end
-    while ~early_exit
-        % here we should detect for a key press and release
-        [resp_timestamp, key_code] = KbStrokeWait(-1);
-        if key_code(keys.start)
-            start_time = resp_timestamp;
-            break
-        elseif key_code(keys.exit)
-            early_exit = true;
-        end
-    end
+    Inst = imread('Instruction\Let3Back.jpg');
+    tex = Screen('MakeTexture',window_ptr, Inst);
+    Screen('DrawTexture', window_ptr, tex);
+    Screen('Flip', window_ptr);   % show stim, return flip time
+    WaitSecs(4.5);
+    vbl = Screen('Flip', window_ptr); 
+    WaitSecs(0.5);
+    start_time = vbl + 0.5;
+    
+    % while ~early_exit
+    %     % here we should detect for a key press and release
+    %     [resp_timestamp, key_code] = KbStrokeWait(-1);
+    %     if key_code(keys.start)
+    %         vbl = Screen('Flip',window_ptr);
+    %         pause(0.5)
+    %         start_time = vbl + 0.5;
+    %         break
+    %     elseif key_code(keys.exit)
+    %         early_exit = true;
+    %     end
+    % end
 
     % main experiment
     for trial_order = 1:height(config)
@@ -103,7 +110,8 @@ try
         trial_end = stim_offset + timing.iti;
         onset_timestamp = nan;
         offset_timestamp = nan;
-
+        
+        
         % now present stimuli and check user's response
         while ~early_exit
             [key_pressed, timestamp, key_code] = KbCheck(-1);
@@ -162,31 +170,32 @@ try
             end
             rt = resp_timestamp - onset_timestamp;
         end
-        rec.onset_real(trial_order) = onset_timestamp;
+        rec.onset_real(trial_order) = onset_timestamp - start_time;
         rec.resp_raw{trial_order} = resp_raw;
         rec.resp{trial_order} = resp;
         rec.rt(trial_order) = rt;
         rec.cort(trial_order) = strcmp(rec.cresp(trial_order), resp);
     end
+
     accu = sum(rec{:, 8} == 1) / (height(config)-3);
 catch exception
     status = -1;
 end
 
-% --- post presentation jobs
-Screen('Close');
-sca;
-% enable character input and show mouse cursor
-ListenChar;
-ShowCursor;
-
-% ---- restore preferences ----
-Screen('Preference', 'VisualDebugLevel', old_visdb);
-Screen('Preference', 'SkipSyncTests', old_sync);
-Screen('Preference', 'TextRenderer', old_text_render);
-Priority(old_pri);
-
-if ~isempty(exception)
-    rethrow(exception)
-end
+% % --- post presentation jobs
+% Screen('Close');
+% sca;
+% % enable character input and show mouse cursor
+% ListenChar;
+% ShowCursor;
+% 
+% % ---- restore preferences ----
+% Screen('Preference', 'VisualDebugLevel', old_visdb);
+% Screen('Preference', 'SkipSyncTests', old_sync);
+% Screen('Preference', 'TextRenderer', old_text_render);
+% Priority(old_pri);
+% 
+% if ~isempty(exception)
+%     rethrow(exception)
+% end
 end
