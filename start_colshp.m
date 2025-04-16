@@ -1,4 +1,4 @@
-function [rec, status, exception] = start_colshp(opts)
+function [accu, rec, status, exception] = start_colshp(opts)
 arguments
     opts.SkipSyncTests (1, 1) {mustBeNumericOrLogical} = false
 end
@@ -8,12 +8,27 @@ status = 0;
 exception = [];
 
 % ---- configure sequence ----
-config = readtable(fullfile("colshp_config", "prac.xlsx"));
-rec = config;
-rec.onset_real = nan(height(config), 1);
-rec.resp_raw = cell(height(config), 1);
-rec.resp = cell(height(config), 1);
-rec.rt = nan(height(config), 1);
+p.trial = 20;
+valid_names = {'Left', 'Right'};
+rec = table();
+rec.Trial = (1:p.trial)';
+rec.shape = randi([1,2], p.trial, 1);
+rec.color = randi([1,2], p.trial, 1);
+rec.task = randi([1,2], p.trial, 1);
+rec.cresp = cell(p.trial, 1);
+for i = 1:p.trial
+    if rec.task(i) == 1
+        rec.cresp(i) = valid_names(rec.shape(i));
+    else
+        rec.cresp(i) = valid_names(rec.color(i));
+    end
+end
+rec.onset = (0:3:3*(p.trial-1))';
+rec.onset_real = nan(p.trial, 1);
+rec.resp_raw = cell(p.trial, 1);
+rec.resp = cell(p.trial, 1);
+rec.rt = nan(p.trial, 1);
+rec.cort = nan(p.trial,1);
 timing = struct( ...
     'iti', 0.5, ... % inter-trial-interval
     'tdur', 2.5); % trial duration
@@ -41,8 +56,8 @@ KbName('UnifyKeyNames')
 keys = struct( ...
     'start', KbName('s'), ...
     'exit', KbName('Escape'), ...
-    'left', KbName('1!'), ...
-    'right', KbName('4$'));
+    'Left', KbName('1!'), ...
+    'Right', KbName('4$'));
 
 % ---- stimuli presentation ----
 % the flag to determine if the experiment should exit early
@@ -71,7 +86,7 @@ try
           r(3)-p.sz*0.1  r(4)-p.sz*0.1];
 
     % display welcome/instr screen and wait for a press of 's' to start
-    sq=imread('MateShiftColor\semang1.jpg');
+    sq=imread('colshp_config\semang1.jpg');
     tex=Screen('MakeTexture',window_ptr,sq);
     Screen('DrawTexture',window_ptr,tex);
     Screen('Flip',window_ptr); 
@@ -112,11 +127,11 @@ try
     end
 
     % main experiment
-    for trial_order = 1:height(config)
+    for trial_order = 1:p.trial
         if early_exit
             break
         end
-        this_trial = config(trial_order, :);
+        this_trial = rec(trial_order, :);
         % stim_str = [num2str(this_trial.shape), '    ', this_trial.color{:}];
         r = CenterRect([0 0 1 1]*p.sz, window_rect); 
 
@@ -178,7 +193,7 @@ try
             rt = 0;
         else
             resp_raw = string(strjoin(cellstr(KbName(resp_code)), '|'));
-            valid_names = {'left', 'right'};
+            valid_names = {'Left', 'Right'};
             valid_codes = cellfun(@(x) keys.(x), valid_names);
             if sum(resp_code) > 1 || (~any(resp_code(valid_codes)))
                 resp = 'invalid';
@@ -187,11 +202,15 @@ try
             end
             rt = resp_timestamp - onset_timestamp;
         end
-        rec.onset_real(trial_order) = onset_timestamp;
+        score = strcmp(rec.cresp(trial_order), resp);
+        rec.onset_real(trial_order) = onset_timestamp - start_time;
         rec.resp_raw{trial_order} = resp_raw;
         rec.resp{trial_order} = resp;
         rec.rt(trial_order) = rt;
+        rec.cort(trial_order) = score;
     end
+    accu = sum(rec{:, 11} == 1) / p.trial;
+
 catch exception
     status = -1;
 end

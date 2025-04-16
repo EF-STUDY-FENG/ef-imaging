@@ -1,4 +1,4 @@
-function [rec, status, exception] = start_stopsignal(opts)
+function [accu, rec, status, exception] = start_stopsignal(opts)
 arguments
     opts.SkipSyncTests (1, 1) {mustBeNumericOrLogical} = false
 end
@@ -50,18 +50,18 @@ keys = struct( ...
 early_exit = false;
 try
     % open a window and set its background color as black
-    [win, window_rect] = PsychImaging('OpenWindow', screen, BlackIndex(screen));
+    [window_ptr, window_rect] = PsychImaging('OpenWindow', screen, BlackIndex(screen));
     [xcenter, ycenter] = RectCenter(window_rect);
     % disable character input and hide mouse cursor
     ListenChar(2);
     HideCursor;
     % set blending function
-    Screen('BlendFunction', win, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    Screen('BlendFunction', window_ptr, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     % set default font name
-    Screen('TextFont', win, 'SimHei');
-    Screen('TextSize', win, round(0.06 * RectHeight(window_rect)));
+    Screen('TextFont', window_ptr, 'SimHei');
+    Screen('TextSize', window_ptr, round(0.06 * RectHeight(window_rect)));
     % get inter flip interval
-    ifi = Screen('GetFlipInterval', win);
+    ifi = Screen('GetFlipInterval', window_ptr);
 
     % ---- configure stimuli ----
     ratio_size = 0.05;
@@ -79,8 +79,8 @@ try
 
     % display welcome/instr screen and wait for a press of 's' to start
     instr = '按S键开始';
-    DrawFormattedText(win, double(instr), 'center', 'center', WhiteIndex(win));
-    Screen('Flip', win);
+    DrawFormattedText(window_ptr, double(instr), 'center', 'center', WhiteIndex(window_ptr));
+    Screen('Flip', window_ptr);
     while ~early_exit
         % here we should detect for a key press and release
         [resp_timestamp, key_code] = KbStrokeWait(-1);
@@ -147,7 +147,7 @@ try
                 break
             end
             if timestamp < stim_onset || timestamp >= stim_offset
-                vbl = Screen('Flip', win);
+                vbl = Screen('Flip', window_ptr);
                 if timestamp >= stim_offset && isnan(offset_timestamp)
                     offset_timestamp = vbl;
                 end
@@ -160,7 +160,7 @@ try
                             arrow_angle = 0;
                     end
                     if timestamp < stim_onset + ssd - 0.5 * ifi
-                        ring_color = WhiteIndex(win);
+                        ring_color = WhiteIndex(window_ptr);
                     else
                         ring_color = [255, 0, 0];
                     end
@@ -171,10 +171,10 @@ try
                     arrow_draw = R * arrow;
                     arrow_x = arrow_draw(1, :) + xcenter;
                     arrow_y = arrow_draw(2, :) + ycenter;
-                    Screen('FillPoly', win, WhiteIndex(win), [arrow_x' arrow_y']);
+                    Screen('FillPoly', window_ptr, WhiteIndex(window_ptr), [arrow_x' arrow_y']);
                     ring_rect = CenterRectOnPointd([0 0 ring_radius*2 ring_radius*2], xcenter, ycenter);
-                    Screen('FrameOval', win, ring_color, ring_rect, ring_line_width);
-                    vbl = Screen('Flip', win);
+                    Screen('FrameOval', window_ptr, ring_color, ring_rect, ring_line_width);
+                    vbl = Screen('Flip', window_ptr);
                     if isnan(onset_timestamp)
                         onset_timestamp = vbl;
                     end
@@ -218,6 +218,7 @@ try
         rec.rt(trial_order) = rt;
         rec.acc(trial_order) = acc;
     end
+    accu = sum(rec{:, 9} == 1) / height(config);
 catch exception
     status = -1;
 end
