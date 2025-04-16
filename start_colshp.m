@@ -1,14 +1,19 @@
-function [accu, rec, status, exception] = start_colshp(opts)
-arguments
-    opts.SkipSyncTests (1, 1) {mustBeNumericOrLogical} = false
-end
+function [accu, rec, status, exception] = start_colshp(window_ptr, window_rect, prac)
+% arguments
+%     opts.SkipSyncTests (1, 1) {mustBeNumericOrLogical} = false
+% end
 
 % ---- configure exception ----
 status = 0;
 exception = [];
+accu = 0.00;
 
 % ---- configure sequence ----
-p.trial = 20;
+if nargin > 3 && prac == 1
+    p.trial = 10;
+else
+    p.trial = 20;
+end
 valid_names = {'Left', 'Right'};
 rec = table();
 rec.Trial = (1:p.trial)';
@@ -34,22 +39,22 @@ timing = struct( ...
     'tdur', 2.5); % trial duration
 p.color = [1 0 0; 0 1 0] * 255; % red / green
 p.sz = 200; %size
-cuetxt = ['X' 'Y']; %'X':shape task,'Y':color task
+cuetxt = {'XZ'; 'YS'}; %'XZ':shape task,'YS':color task
 
-% ---- configure screen and window ----
-% setup default level of 2
-PsychDefaultSetup(2);
-% screen selection
-screen_to_display = max(Screen('Screens'));
-% set the start up screen to black
-old_visdb = Screen('Preference', 'VisualDebugLevel', 1);
-% do not skip synchronization test to make sure timing is accurate
-old_sync = Screen('Preference', 'SkipSyncTests', double(opts.SkipSyncTests));
-% use FTGL text plugin
-old_text_render = Screen('Preference', 'TextRenderer', 1);
-% set priority to the top
-old_pri = Priority(MaxPriority(screen_to_display));
-% PsychDebugWindowConfiguration([], 0.1);
+% % ---- configure screen and window ----
+% % setup default level of 2
+% PsychDefaultSetup(2);
+% % screen selection
+% screen_to_display = max(Screen('Screens'));
+% % set the start up screen to black
+% old_visdb = Screen('Preference', 'VisualDebugLevel', 1);
+% % do not skip synchronization test to make sure timing is accurate
+% old_sync = Screen('Preference', 'SkipSyncTests', 1);
+% % use FTGL text plugin
+% old_text_render = Screen('Preference', 'TextRenderer', 1);
+% % set priority to the top
+% old_pri = Priority(MaxPriority(screen_to_display));
+% % PsychDebugWindowConfiguration([], 0.1);
 
 % ---- keyboard settings ----
 KbName('UnifyKeyNames')
@@ -64,18 +69,18 @@ keys = struct( ...
 early_exit = false;
 
 try
-     % open a window and set its background color as black
-    [window_ptr, window_rect] = PsychImaging('OpenWindow', ...
-        screen_to_display, BlackIndex(screen_to_display));
-    % disable character input and hide mouse cursor
-    ListenChar(2);
-    HideCursor;
-    % set blending function
-    Screen('BlendFunction', window_ptr, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    % set default font name
-    Screen('TextFont', window_ptr, 'SimHei');
-    Screen('TextSize', window_ptr, round(0.06 * RectHeight(window_rect)));
-    % get inter flip interval
+    %  % open a window and set its background color as black
+    % [window_ptr, window_rect] = PsychImaging('OpenWindow', ...
+    %     screen_to_display, BlackIndex(screen_to_display));
+    % % disable character input and hide mouse cursor
+    % ListenChar(2);
+    % HideCursor;
+    % % set blending function
+    % Screen('BlendFunction', window_ptr, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    % % set default font name
+    % Screen('TextFont', window_ptr, 'SimHei');
+    % Screen('TextSize', window_ptr, round(0.06 * RectHeight(window_rect)));
+    % % get inter flip interval
     ifi = Screen('GetFlipInterval', window_ptr);
 
     % configure shape location
@@ -86,45 +91,28 @@ try
           r(3)-p.sz*0.1  r(4)-p.sz*0.1];
 
     % display welcome/instr screen and wait for a press of 's' to start
-    sq=imread('colshp_config\semang1.jpg');
-    tex=Screen('MakeTexture',window_ptr,sq);
-    Screen('DrawTexture',window_ptr,tex);
-    Screen('Flip',window_ptr); 
-    [ keyIsDown, ~, keyCode ] = KbCheck;
-    keyCode = find(keyCode, 1);
-    if keyIsDown
-        ignoreKey=keyCode;
-        DisableKeysForKbCheck(ignoreKey);
-    end
-    while ~early_exit
-        % here we should detect for a key press and release
-        [resp_timestamp, key_code] = KbStrokeWait(-1);
-        if key_code(keys.start)
-            % start_time = resp_timestamp;
-            break
-        elseif key_code(keys.exit)
-            early_exit = true;
-        end
-    end
-    str = sprintf(['请根据提示对颜色或形状进行判断\n' ...
-            '红色或者圆圈按%s\n绿色或者三角形按%s\n' ...
-            '请又快又准确的进行判断\n' ...
-            '接下来是正式实验，不会有提示了\n' ...
-            '按s键开始'], '1','4');
-    Screen('TextSize', window_ptr, 36);
-    DrawFormattedText(window_ptr, double(str), 'center', 'center', ...
-        WhiteIndex(window_ptr), [], 0, 0, 2);
-    Screen('Flip', window_ptr);
-    while ~early_exit
-        % here we should detect for a key press and release
-        [resp_timestamp, key_code] = KbStrokeWait(-1);
-        if key_code(keys.start)
-            start_time = resp_timestamp;
-            break
-        elseif key_code(keys.exit)
-            early_exit = true;
-        end
-    end
+    Inst = imread('Instruction\ColShp.jpg');
+    tex = Screen('MakeTexture',window_ptr, Inst);
+    Screen('DrawTexture', window_ptr, tex);
+    Screen('Flip',window_ptr);
+    WaitSecs(4.5);
+    vbl = Screen('Flip', window_ptr); 
+    WaitSecs(0.5);
+    start_time = vbl + 0.5; 
+    
+    % while ~early_exit
+    %     % here we should detect for a key press and release
+    %     [resp_timestamp, key_code] = KbStrokeWait(-1);
+    %     if key_code(keys.start)
+    %         vbl = Screen('Flip',window_ptr);
+    %         pause(0.5)
+    %         start_time = vbl + 0.5;
+    %         break
+    %     elseif key_code(keys.exit)
+    %         early_exit = true;
+    %     end
+    % end
+    
 
     % main experiment
     for trial_order = 1:p.trial
@@ -171,7 +159,7 @@ try
                 end
             elseif timestamp < stim_offset - 0.5 * ifi
                 Screen('TextSize', window_ptr, 72);
-                DrawFormattedText(window_ptr, cuetxt(this_trial.task), 'center', r(2)-100, ...
+                DrawFormattedText(window_ptr, strjoin(cuetxt(this_trial.task)), 'center', r(2)-100, ...
                     WhiteIndex(window_ptr));
                 vbl = Screen('Flip', window_ptr, [], 1);
                 if this_trial.shape == 1
@@ -215,20 +203,20 @@ catch exception
     status = -1;
 end
 
-% --- post presentation jobs
-Screen('Close');
-sca;
-% enable character input and show mouse cursor
-ListenChar;
-ShowCursor;
-
-% ---- restore preferences ----
-Screen('Preference', 'VisualDebugLevel', old_visdb);
-Screen('Preference', 'SkipSyncTests', old_sync);
-Screen('Preference', 'TextRenderer', old_text_render);
-Priority(old_pri);
-
-if ~isempty(exception)
-    rethrow(exception)
-end
+% % --- post presentation jobs
+% Screen('Close');
+% sca;
+% % enable character input and show mouse cursor
+% ListenChar;
+% ShowCursor;
+% 
+% % ---- restore preferences ----
+% Screen('Preference', 'VisualDebugLevel', old_visdb);
+% Screen('Preference', 'SkipSyncTests', old_sync);
+% Screen('Preference', 'TextRenderer', old_text_render);
+% Priority(old_pri);
+% 
+% if ~isempty(exception)
+%     rethrow(exception)
+% end
 end
