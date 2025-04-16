@@ -1,4 +1,4 @@
-function [rec, accu, status, exception] = start_AntiSac(opts)
+function [accu, rec, status, exception] = start_AntiSac(opts)
 arguments
     opts.SkipSyncTests (1,1) {mustBeNumericOrLogical} = false
 end
@@ -106,7 +106,7 @@ try
     end
 
     % main experiment
-    for trail_order = 1:height(config)
+    for trail_order = 1:6%height(config)
         this_trial = config(trail_order, :);
         DrawFormattedText(window_ptr, '+', 'center', 'center', WhiteIndex(window_ptr));
         WaitTill(GetSecs + ifi);
@@ -143,7 +143,8 @@ try
         WaitTill(VBL + timing.cue_dur); % cue duration
         VBL = Screen('Flip', window_ptr); % target onset;
         tmp(trail_order,3) = VBL-startSecs; % target onset;
-        rec.onset_real(trail_order) = tmp(1,3);% record the onset of each trial, useful for fMRI study
+        disp(tmp)
+        rec.onset_real(trail_order) = tmp(trail_order,3);% record the onset of each trial, useful for fMRI study
 
         %prepare mask
         imageData = mask1;

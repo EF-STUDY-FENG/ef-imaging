@@ -9,11 +9,11 @@ exception = [];
 
 % ---- configure sequence ----
 p.back = 127;
-p.nBlock = 1;
+p.nBlock = 2;
 p.nback = 2;
 p.nSquare = 10;
 p.squareSize = 54; % pixels, ~1.59 cm for 19-in monitor, 1280x1024
-p.nTrialPerBlock = 24;
+p.nTrialPerBlock = 10;
 nTrial = p.nTrialPerBlock * p.nBlock;
 p.recLabel = {'iBlock','iTrial' 'flashLoc' 'respCorrect' 'RT'};
 rec = nan(nTrial, length(p.recLabel));
@@ -49,8 +49,8 @@ p.keys = {'1', '4'};
 keys = struct( ...
     'start', KbName('s'), ...
     'exit', KbName('Escape'), ...
-    'N', KbName('1!'), ...
-    'Y', KbName('4$'));
+    'Y', KbName('1!'), ...
+    'N', KbName('4$'));
 
 % ---- stimuli presentation ----
 % the flag to determine if the experiment should exit early
@@ -152,7 +152,7 @@ try
             end
             if iscellstr(key), key = key{end}; end % multipe response
             vbl = t;
-            ok = strcmp(key, p.keys{2}) == yn(i);
+            ok = strcmp(key, p.keys{1}) == yn(i);
             if i<3 
                 ok=NaN;t(1)=NaN;end
 
@@ -166,15 +166,14 @@ try
             rec(iTrial,6) = t0-start_time;
         end
 
-        accu=length(find(rec(:,4)==1 & rec(:,2)==block))/(p.nTrialPerBlock-2);
-        % disp(accu);
-        % disp(rec);
+        
         str = '休息一下\n按键继续.';
         DrawFormattedText(window_ptr, double(str), 'center', 'center', WhiteIndex(window_ptr));
         Screen('Flip', window_ptr);
         KbReleaseWait; WaitTill(p.keys);
 
     end
+    accu=length(find(rec(:,4)==1))/((p.nTrialPerBlock-2)*p.nBlock);
 
 
 catch exception
