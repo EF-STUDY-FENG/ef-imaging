@@ -1,5 +1,5 @@
 %%% --- Main Program --- %%%
-% % ---- Folder Config %
+ %%% ---- Folder Config  ---- %%%
 subID = 001;         % subject ID
 sex = 'M';             % Sex
 name = 'XunchaoHu';    % Full Name
