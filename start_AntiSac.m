@@ -22,16 +22,16 @@ rec.rt = nan(height(config), 1);
 rec.cort = nan(height(config), 1);
 timing = struct( ...
     'iti', 0.15, ... % inter-trial-interval
-    'tdur', 1, ...1ss
+    'tdur', 1, ...
     'cue_dur', 0.15, ...
-    'tar_dur', 0.175); % trial duration
+    'tar_dur', 0.2); % trial duration
 
 load 'AntiSac_config/target.mat' target 
 load 'AntiSac_config/mask' mask1
 for i=1:4
-    target{i} = imresize(target{i}, 1.52, "nearest");
+    target{i} = imresize(target{i}, 1.78, "nearest");
 end
-cue = 128 * ones(64);
+cue = 128 * ones(75);
 cue_size = size(cue);
 target_size = size(target{1,1});
 tmp = zeros(height(config)+1, 5);
@@ -165,12 +165,12 @@ try
                 if this_trial.Location_Of == 1
                     
                     Screen('FillRect', window_ptr, GrayIndex(window_ptr), ...
-                        [xcenter+96*3,ycenter-round(cue_size(1)/2),xcenter+96*3+cue_size(2),ycenter+round(cue_size(1)/2)]);
+                        [xcenter+110*3,ycenter-round(cue_size(1)/2),xcenter+110*3+cue_size(2),ycenter+round(cue_size(1)/2)]);
                     % Screen(window_ptr,'PutImage',imageData, ...
                     %     [xcenter+96*3,ycenter-round(cue_size(1)/2),xcenter+96*3+cue_size(2),ycenter+round(cue_size(1)/2)]);
                 else 
                     Screen('FillRect', window_ptr, GrayIndex(window_ptr), ...
-                        [xcenter-96*3-cue_size(2),ycenter-round(cue_size(1)/2),xcenter-96*3,ycenter+round(cue_size(1)/2)]);
+                        [xcenter-110*3-cue_size(2),ycenter-round(cue_size(1)/2),xcenter-110*3,ycenter+round(cue_size(1)/2)]);
 
                     % Screen(window_ptr,'PutImage',imageData, ...
                     %     [xcenter-96*3-cue_size(2),ycenter-round(cue_size(1)/2),xcenter-96*3,ycenter+round(cue_size(1)/2)]);
@@ -184,10 +184,10 @@ try
                 imageData = target{this_trial.Tar_Dir,1};
                 if this_trial.Location_Of == 1
                     Screen(window_ptr,'PutImage',imageData, ...
-                        [xcenter-96*3.625-target_size(2),ycenter-round(target_size(1)/2),xcenter-96*3.625,ycenter+round(target_size(1)/2)]);
+                        [xcenter-110*3.625-target_size(2),ycenter-round(target_size(1)/2),xcenter-110*3.625,ycenter+round(target_size(1)/2)]);
                 else
                     Screen(window_ptr,'PutImage',imageData, ...
-                        [xcenter+96*3.625,ycenter-round(target_size(1)/2),xcenter+96*3.625+target_size(2),ycenter+round(target_size(1)/2)]);
+                        [xcenter+110*3.625,ycenter-round(target_size(1)/2),xcenter+110*3.625+target_size(2),ycenter+round(target_size(1)/2)]);
                 end
                 vbl = Screen('Flip', window_ptr);
                 if isnan(tar_timestamp) 
@@ -198,10 +198,10 @@ try
                 imageData = mask1;
                 if this_trial.Location_Of == 1
                     Screen(window_ptr,'PutImage',imageData, ...
-                        [xcenter-96*3.625-target_size(2),ycenter-round(target_size(1)/2),xcenter-96*3.625,ycenter+round(target_size(1)/2)]);
+                        [xcenter-110*3.625-target_size(2),ycenter-round(target_size(1)/2),xcenter-110*3.625,ycenter+round(target_size(1)/2)]);
                 else
                     Screen(window_ptr,'PutImage',imageData, ...
-                        [xcenter+96*3.625,ycenter-round(target_size(1)/2),xcenter+96*3.625+target_size(2),ycenter+round(target_size(1)/2)]);
+                        [xcenter+110*3.625,ycenter-round(target_size(1)/2),xcenter+110*3.625+target_size(2),ycenter+round(target_size(1)/2)]);
                 end
                 vbl = Screen('Flip', window_ptr);
                 if isnan(mask_timestamp) 
