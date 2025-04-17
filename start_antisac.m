@@ -1,4 +1,4 @@
-function [accu, rec, status, exception] = start_AntiSac(run, window_ptr, window_rect, prac)
+function [accu, rec, status, exception] = start_antisac(run, window_ptr, window_rect, prac)
 % arguments
 %     opts.SkipSyncTests (1,1) {mustBeNumericOrLogical} = false
 % end
@@ -10,10 +10,10 @@ accu = 0.00;
 
 % ---- configure sequence ----
 if nargin > 3 && prac == 1
-    config = readtable(fullfile("config_prac", "AntiSac_prac.xlsx"));
+    config = readtable(fullfile("config_prac", "antisac_prac.xlsx"));
 else
-    TaskFile = sprintf('AntiSac_run%d.xlsx', run);
-    config = readtable(fullfile("config/AntiSac_config", TaskFile));
+    TaskFile = sprintf('antisac_run%d.xlsx', run);
+    config = readtable(fullfile("config/antisac_config", TaskFile));
 end
 rec = config;
 rec.onset_real = nan(height(config), 1);
@@ -26,8 +26,8 @@ timing = struct( ...
     'cue_dur', 0.15, ...
     'tar_dur', 0.2); % trial duration
 
-load 'AntiSac_config/target.mat' target
-load 'AntiSac_config/mask' mask1
+load 'antisac_config/target.mat' target
+load 'antisac_config/mask' mask1
 for i=1:4
     target{i} = imresize(target{i}, 1.78, "nearest");
 end
@@ -87,7 +87,7 @@ try
     % stim_window = [0, 0, RectWidth(window_rect), ratio_size * RectHeight(window_rect)];
 
     % display welcome/instr screen and wait for a press of 's' to start
-    Inst = imread('Instruction\AntiSac.jpg');  %%% instruction
+    Inst = imread('Instruction\antisac.jpg');  %%% instruction
     tex=Screen('MakeTexture', window_ptr, Inst);
     Screen('DrawTexture', window_ptr, tex);
     Screen('Flip', window_ptr);   % show stim, return flip time

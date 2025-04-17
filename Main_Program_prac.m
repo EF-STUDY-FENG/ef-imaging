@@ -4,7 +4,7 @@ subID = 001;         % subject ID
 sex = 'M';             % Sex
 name = 'XunchaoHu';    % Full Name
 mainFolderName = sprintf('TestResults/Sub%03d_%s_%s', subID, sex, name);
-mainFolderPath = fullfile(pwd, mainFolderName); 
+mainFolderPath = fullfile(pwd, mainFolderName);
 if ~exist(mainFolderPath, 'dir') % Created Folder, if the folder does not exist
     mkdir(mainFolderPath);
 end
@@ -60,13 +60,13 @@ try
     Screen('TextSize', window_ptr, round(0.06 * RectHeight(window_rect)));
     % get inter flip interval
     % ifi = Screen('GetFlipInterval', window_ptr);
-    % 
+    %
     % % ---- configure stimuli ----
     % ratio_size = 0.3;
     % stim_window = [0, 0, RectWidth(window_rect), ratio_size * RectHeight(window_rect)];
 
     % ---- '+' display ---- %
-    DrawFormattedText(window_ptr, '+', 'center', 'center', WhiteIndex(window_ptr)); 
+    DrawFormattedText(window_ptr, '+', 'center', 'center', WhiteIndex(window_ptr));
     Screen('Flip', window_ptr);
 
     % Solve Bug
@@ -110,10 +110,10 @@ try
         output_name = fullfile(runFolderPath, TaskFile_name);
         save(output_name, "accu", "rec");
 
-        %% -- AntiSac Task -- %%
-        [accu, rec] = start_AntiSac(run, window_ptr, window_rect, 1);
+        %% -- antisac Task -- %%
+        [accu, rec] = start_antisac(run, window_ptr, window_rect, 1);
         T=char(datetime("now","Format","MM-dd_HH.mm"));
-        TaskFile_name = sprintf('Sub%03d_%s_%s_run%d_Antisac_%s.mat', subID, sex, name, run, T);
+        TaskFile_name = sprintf('Sub%03d_%s_%s_run%d_antisac_%s.mat', subID, sex, name, run, T);
         output_name = fullfile(runFolderPath, TaskFile_name);
         save(output_name, "accu", "rec");
 
@@ -154,7 +154,7 @@ try
             out_ssd_place = sprintf('SST_config/Sub_ssd/Sub%03d_run%d_SST.mat', subID, run);
             save(output_name, "accu", "rec", "out_ssd");
             save(out_ssd_place, "out_ssd");
-        else 
+        else
             init_ssd_place = sprintf('SST_config/Sub_ssd/Sub%03d_run%d_SST.mat', subID, run-1);
             load(init_ssd_place, "out_ssd");
             init_ssd = out_ssd;
@@ -168,7 +168,7 @@ try
         end
 
         %% ---- END Inst Display ---- %%
-        Inst = imread('Instruction\END.jpg');  %%% instruction 
+        Inst = imread('Instruction\END.jpg');  %%% instruction
         tex=Screen('MakeTexture', window_ptr, Inst);
         Screen('DrawTexture', window_ptr, tex);
         Screen('Flip', window_ptr);   % show stim, return flip time
