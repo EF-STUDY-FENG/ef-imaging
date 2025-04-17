@@ -26,7 +26,7 @@ timing = struct( ...
     'cue_dur', 0.15, ...
     'tar_dur', 0.2); % trial duration
 
-load 'AntiSac_config/target.mat' target 
+load 'AntiSac_config/target.mat' target
 load 'AntiSac_config/mask' mask1
 for i=1:4
     target{i} = imresize(target{i}, 1.78, "nearest");
@@ -70,7 +70,7 @@ try
     % [window_ptr, window_rect] = PsychImaging('OpenWindow', ...
     %     screen, BlackIndex(screen));
     [xcenter, ycenter] = RectCenter(window_rect);
-    % 
+    %
     % % disable character input and hide mouse cursor
     % ListenChar(2);
     % HideCursor;
@@ -81,18 +81,18 @@ try
     % Screen('TextSize', window_ptr, round(0.06 * RectHeight(window_rect)));
     % % get inter flip interval
     ifi = Screen('GetFlipInterval', window_ptr);
-    % 
+    %
     % % ---- configure stimuli ----
     % ratio_size = 0.3;
     % stim_window = [0, 0, RectWidth(window_rect), ratio_size * RectHeight(window_rect)];
 
     % display welcome/instr screen and wait for a press of 's' to start
-    Inst = imread('Instruction\AntiSac.jpg');  %%% instruction 
+    Inst = imread('Instruction\AntiSac.jpg');  %%% instruction
     tex=Screen('MakeTexture', window_ptr, Inst);
     Screen('DrawTexture', window_ptr, tex);
     Screen('Flip', window_ptr);   % show stim, return flip time
     WaitSecs(4.5);
-    vbl = Screen('Flip', window_ptr); 
+    vbl = Screen('Flip', window_ptr);
     WaitSecs(0.5);
     start_time = vbl + 0.5;
 
@@ -150,25 +150,25 @@ try
                 resp_made = true;
             end
             if timestamp >= trial_end - 0.5 * ifi
-                    % remaining time is not enough for a new flip
-                    break
+                % remaining time is not enough for a new flip
+                break
             end
             if timestamp >= fixation_onset + 0.5 * ifi && timestamp < cue_onset - 0.5 * ifi
-               DrawFormattedText(window_ptr, '+', 'center', 'center', WhiteIndex(window_ptr)); 
-               vbl = Screen('Flip', window_ptr);
-               if isnan(fixation_timestamp)
-                   fixation_timestamp = vbl;
-                   tmp(trial_order, 1) = vbl - start_time;
-               end
+                DrawFormattedText(window_ptr, '+', 'center', 'center', WhiteIndex(window_ptr));
+                vbl = Screen('Flip', window_ptr);
+                if isnan(fixation_timestamp)
+                    fixation_timestamp = vbl;
+                    tmp(trial_order, 1) = vbl - start_time;
+                end
             elseif timestamp >= cue_onset + 0.5 * ifi && timestamp < tar_onset - 0.5 * ifi
                 % imageData = cue;
                 if this_trial.Location_Of == 1
-                    
+
                     Screen('FillRect', window_ptr, GrayIndex(window_ptr), ...
                         [xcenter+110*3,ycenter-round(cue_size(1)/2),xcenter+110*3+cue_size(2),ycenter+round(cue_size(1)/2)]);
                     % Screen(window_ptr,'PutImage',imageData, ...
                     %     [xcenter+96*3,ycenter-round(cue_size(1)/2),xcenter+96*3+cue_size(2),ycenter+round(cue_size(1)/2)]);
-                else 
+                else
                     Screen('FillRect', window_ptr, GrayIndex(window_ptr), ...
                         [xcenter-110*3-cue_size(2),ycenter-round(cue_size(1)/2),xcenter-110*3,ycenter+round(cue_size(1)/2)]);
 
@@ -190,7 +190,7 @@ try
                         [xcenter+110*3.625,ycenter-round(target_size(1)/2),xcenter+110*3.625+target_size(2),ycenter+round(target_size(1)/2)]);
                 end
                 vbl = Screen('Flip', window_ptr);
-                if isnan(tar_timestamp) 
+                if isnan(tar_timestamp)
                     tar_timestamp = vbl; % tar offset;
                     tmp(trial_order, 3) = vbl - start_time;% tar onset;
                 end
@@ -204,7 +204,7 @@ try
                         [xcenter+110*3.625,ycenter-round(target_size(1)/2),xcenter+110*3.625+target_size(2),ycenter+round(target_size(1)/2)]);
                 end
                 vbl = Screen('Flip', window_ptr);
-                if isnan(mask_timestamp) 
+                if isnan(mask_timestamp)
                     mask_timestamp = vbl; % tar offset;
                     tmp(trial_order, 4) = vbl - start_time;% tar onset;
                 end
@@ -216,7 +216,7 @@ try
             % resp_raw = '';
             resp = '';
             rt = 0;
-        else 
+        else
             % resp_raw = string(strjoin(cellstr(KbName(resp_code)), '|'));
             valid_names = {'left', 'up', 'down', 'right'};
             valid_codes = cellfun(@(x) keys.(x), valid_names);
@@ -234,9 +234,9 @@ try
         rec.rt(trial_order) = rt;
         rec.cort(trial_order) = score;
 
-    
+
     end
-    accu = sum(rec{:, 10} == 1) / height(config);   
+    accu = sum(rec{:, 10} == 1) / height(config);
 
 
 
@@ -251,13 +251,13 @@ end
 % % enable character input and show mouse cursor
 % ListenChar;
 % ShowCursor;
-% 
+%
 % % ---- restore preferences ----
 % Screen('Preference', 'VisualDebugLevel', old_visdb);
 % Screen('Preference', 'SkipSyncTests', old_sync);
 % Screen('Preference', 'TextRenderer', old_text_render);
 % Priority(old_pri);
-% 
+%
 % if ~isempty(exception)
 %     rethrow(exception)
 % end
