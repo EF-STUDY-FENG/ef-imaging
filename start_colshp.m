@@ -57,7 +57,6 @@ cuetxt = {'XZ'; 'YS'}; %'XZ':shape task,'YS':color task
 % % PsychDebugWindowConfiguration([], 0.1);
 
 % ---- keyboard settings ----
-KbName('UnifyKeyNames')
 keys = struct( ...
     'start', KbName('s'), ...
     'exit', KbName('Escape'), ...
@@ -91,7 +90,7 @@ try
           r(3)-p.sz*0.1  r(4)-p.sz*0.1];
 
     % display welcome/instr screen and wait for a press of 's' to start
-    Inst = imread('Instruction\ColShp.jpg');
+    Inst = imread('Instruction\colshp.jpg');
     tex = Screen('MakeTexture',window_ptr, Inst);
     Screen('DrawTexture', window_ptr, tex);
     Screen('Flip',window_ptr);

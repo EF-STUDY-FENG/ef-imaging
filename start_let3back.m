@@ -70,7 +70,7 @@ try
     stim_window = [0, 0, RectWidth(window_rect), ratio_size * RectHeight(window_rect)];
 
     % display welcome/instr screen and wait for a press of 's' to start
-    Inst = imread('Instruction\Let3Back.jpg');
+    Inst = imread('Instruction\let3back.jpg');
     tex = Screen('MakeTexture',window_ptr, Inst);
     Screen('DrawTexture', window_ptr, tex);
     Screen('Flip', window_ptr);   % show stim, return flip time

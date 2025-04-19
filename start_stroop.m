@@ -9,10 +9,10 @@ accu = 0.00;
 
 % ---- configure sequence ----
 if nargin > 3 && prac == 1
-    config = readtable(fullfile("config_prac", "Stroop_prac.xlsx"));
+    config = readtable(fullfile("config_prac", "stroop_prac.xlsx"));
 else
-    TaskFile = sprintf('Stroop_run%d.xlsx', run);
-    config = readtable(fullfile("config/Stroop_config", TaskFile));
+    TaskFile = sprintf('stroop_run%d.xlsx', run);
+    config = readtable(fullfile("config/stroop_config", TaskFile));
 end
 rec = config;
 rec.onset_real = nan(height(config), 1);
@@ -24,7 +24,7 @@ timing = struct(...
     'iti', 0.5, ... 
     'tdur', 2.5); 
 
-imageFolder = 'Stroop_config';
+imageFolder = 'stimuli/stroop_stimuli';
 
 % % ---- configure screen and window ----
 % PsychDefaultSetup(2);

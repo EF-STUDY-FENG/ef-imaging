@@ -12,7 +12,7 @@ p.back = 127;
 % p.nBlock = 4;
 p.nback = 2;
 p.nSquare = 10;
-p.squareSize = 54;   % pixels, ~1.59 cm for 19-in monitor, 1280x1024
+p.squareSize = 64;   % pixels, ~1.59 cm for 19-in monitor, 1280x1024
 if nargin > 3 && prac == 1
     p.nTrial = 15;
 else

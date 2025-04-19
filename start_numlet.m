@@ -74,7 +74,7 @@ try
     SquareFig = [0 0 250 100];
 
    % display welcome/instr screen and wait for a press of 's' to start
-    Inst = imread('Instruction\NumLet.jpg');
+    Inst = imread('Instruction\numlet.jpg');
     tex = Screen('MakeTexture',window_ptr, Inst);
     Screen('DrawTexture', window_ptr, tex);
     Screen('Flip', window_ptr);   % show stim, return flip time

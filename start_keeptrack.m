@@ -1,4 +1,4 @@
-function [accu, rec, status, exception] = start_keeptrack(run, window_ptr, window_rect, prac)
+function [accu, rec, dur, status, exception] = start_keeptrack(run, window_ptr, window_rect, prac)
 % arguments
 %     opts.SkipSyncTests (1, 1) {mustBeNumericOrLogical} = false
 % end
@@ -15,8 +15,9 @@ accu = 0.00;
 % ---- configure sequence ----
 p.maxTri = 4;
 p.level = 4;
+p.offset = 85;
 % Errors = 0;
-config = readtable(fullfile("config/KeepTrack_config", 'KeepTrack.xlsx'));
+config = readtable(fullfile("config/keeptrack_config", 'keeptrack.xlsx'));
 rec = table();
 rec.level = config.level;
 if nargin > 3 && prac == 1
@@ -59,7 +60,7 @@ early_exit = false;
 try
     % open a window and set its background color as black
     % [window_ptr, window_rect] = PsychImaging('OpenWindow', screen, BlackIndex(screen));
-    [xcenter, ycenter] = RectCenter(window_rect);
+    [~, ycenter] = RectCenter(window_rect);
     screenWidth = window_rect(3);
     % % disable character input and hide mouse cursor
     % ListenChar(2);
@@ -73,13 +74,14 @@ try
 
 
     % display welcome/instr screen and wait for a press of 's' to start
-    Inst = imread('Instruction\KeepTrack.jpg');
+    Inst = imread('Instruction\keeptrack.jpg');
     tex = Screen('MakeTexture',window_ptr, Inst);
     Screen('DrawTexture', window_ptr, tex);
     Screen('Flip',window_ptr); 
     WaitSecs(4.5);
-    Screen('Flip',window_ptr); 
+    vbl = Screen('Flip',window_ptr); 
     WaitSecs(0.5);
+    start = vbl + 0.5;
 
     % [keyIsDown, ~, keyCode] = KbCheck;
     % keyCode = find(keyCode, 1);
@@ -142,14 +144,9 @@ try
                 early_exit = true;
             end
             % ---- configure stimuli ----
-            if p.level <= 6
+            if p.level <= 7
                 xPos = linspace(screenWidth*0.3, screenWidth*0.7, p.level);
                 yPos = ones(1, p.level) * ycenter;
-            elseif p.level == 7
-                xPos = [linspace(screenWidth*0.3, screenWidth*0.7, 6),...
-                        xcenter];
-                yPos = [ones(1,6)*(ycenter-100),...  
-                        ones(1,p.level-6)*(ycenter+100)];
             else
                 xPos = [linspace(screenWidth*0.3, screenWidth*0.7, 6),...
                         linspace(screenWidth*0.3, screenWidth*0.7, p.level-6)];
@@ -209,21 +206,14 @@ try
             
             score = all(corr(:) ~= 0);
             rec.score(trial) = score;
-            % if score
             p.level = p.level + 1;
-                % Errors = 0;
-            % else
-            %     Errors = Errors + 1;
-            %     if Errors >= 2
-            %         p.level = p.level - 1;
-            %         Errors = 0;
-            %     end
-            % end
+
             break
         end
     end
     accu = sum(rec{:, 3} == 1) / p.maxTri;
-
+    Endtime = GetSecs;
+    dur = Endtime - start;
         
 
 catch exception

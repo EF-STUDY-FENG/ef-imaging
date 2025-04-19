@@ -26,14 +26,6 @@ timing = struct( ...
     'cue_dur', 0.15, ...
     'tar_dur', 0.2); % trial duration
 
-load 'antisac_config/target.mat' target
-load 'antisac_config/mask' mask1
-for i=1:4
-    target{i} = imresize(target{i}, 1.78, "nearest");
-end
-cue = 128 * ones(75);
-cue_size = size(cue);
-target_size = size(target{1,1});
 tmp = zeros(height(config)+1, 5);
 % % ---- configure screen and window ----
 % % setup default level of 2
@@ -51,8 +43,6 @@ tmp = zeros(height(config)+1, 5);
 % % PsychDebugWindowConfiguration([], 0.1);
 
 % ---- keyboard settings ----
-KbName('UnifyKeyNames')
-
 keys = struct( ...
     'start', KbName('s'), ...
     'exit', KbName('Escape'), ...
@@ -60,8 +50,6 @@ keys = struct( ...
     'up', KbName('2@'), ...
     'down', KbName('3#'), ...
     'right', KbName('4$'));
-
-% start_time = GetSecs;
 % ---- stimuli presentation ----
 % the flag to determine if the experiment should exit early
 early_exit = false;
@@ -69,8 +57,9 @@ try
     %  % open a window and set its background color as black
     % [window_ptr, window_rect] = PsychImaging('OpenWindow', ...
     %     screen, BlackIndex(screen));
-    [xcenter, ycenter] = RectCenter(window_rect);
-    %
+    [~, ycenter] = RectCenter(window_rect);
+    [screenWidth, screenHeight] = Screen('WindowSize', window_ptr);
+    % 
     % % disable character input and hide mouse cursor
     % ListenChar(2);
     % HideCursor;
@@ -81,10 +70,17 @@ try
     % Screen('TextSize', window_ptr, round(0.06 * RectHeight(window_rect)));
     % % get inter flip interval
     ifi = Screen('GetFlipInterval', window_ptr);
-    %
-    % % ---- configure stimuli ----
+    
+    % ---- configure stimuli ----
     % ratio_size = 0.3;
     % stim_window = [0, 0, RectWidth(window_rect), ratio_size * RectHeight(window_rect)];
+    matrixSize = 0.05 * screenHeight; 
+    xLeftCenter = 0.3 * screenWidth; 
+    xRightCenter = 0.7 * screenWidth;
+    leftMatrixRect = [xLeftCenter - matrixSize/2, ycenter - matrixSize/2, ...
+                  xLeftCenter + matrixSize/2, ycenter + matrixSize/2];
+    rightMatrixRect = [xRightCenter - matrixSize/2, ycenter - matrixSize/2, ...
+                   xRightCenter + matrixSize/2, ycenter + matrixSize/2];
 
     % display welcome/instr screen and wait for a press of 's' to start
     Inst = imread('Instruction\antisac.jpg');  %%% instruction
@@ -95,20 +91,6 @@ try
     vbl = Screen('Flip', window_ptr);
     WaitSecs(0.5);
     start_time = vbl + 0.5;
-
-    % while ~early_exit
-    %     % here we should detect for a key press and release
-    %     [~, key_code] = KbStrokeWait(-1);
-    %     if key_code(keys.start)
-    %         vbl = Screen('Flip',window_ptr);
-    %         pause(0.5)
-    %         start_time = vbl + 5;
-    %         break
-    %     elseif key_code(keys.exit)
-    %         early_exit = true;
-    %     end
-    % end
-
 
     % main experiment
     for trial_order = 1:height(config)
@@ -163,15 +145,11 @@ try
             elseif timestamp >= cue_onset + 0.5 * ifi && timestamp < tar_onset - 0.5 * ifi
                 % imageData = cue;
                 if this_trial.Location_Of == 1
-
-                    Screen('FillRect', window_ptr, GrayIndex(window_ptr), ...
-                        [xcenter+110*3,ycenter-round(cue_size(1)/2),xcenter+110*3+cue_size(2),ycenter+round(cue_size(1)/2)]);
+                    Screen('FillRect', window_ptr, GrayIndex(window_ptr), rightMatrixRect);
                     % Screen(window_ptr,'PutImage',imageData, ...
                     %     [xcenter+96*3,ycenter-round(cue_size(1)/2),xcenter+96*3+cue_size(2),ycenter+round(cue_size(1)/2)]);
                 else
-                    Screen('FillRect', window_ptr, GrayIndex(window_ptr), ...
-                        [xcenter-110*3-cue_size(2),ycenter-round(cue_size(1)/2),xcenter-110*3,ycenter+round(cue_size(1)/2)]);
-
+                    Screen('FillRect', window_ptr, GrayIndex(window_ptr), leftMatrixRect);
                     % Screen(window_ptr,'PutImage',imageData, ...
                     %     [xcenter-96*3-cue_size(2),ycenter-round(cue_size(1)/2),xcenter-96*3,ycenter+round(cue_size(1)/2)]);
                 end
@@ -181,28 +159,38 @@ try
                     tmp(trial_order, 2) = vbl - start_time;% cue onset;
                 end
             elseif timestamp >= tar_onset + 0.5 * ifi && timestamp < mask_onset - 0.5 * ifi
-                imageData = target{this_trial.Tar_Dir,1};
-                if this_trial.Location_Of == 1
-                    Screen(window_ptr,'PutImage',imageData, ...
-                        [xcenter-110*3.625-target_size(2),ycenter-round(target_size(1)/2),xcenter-110*3.625,ycenter+round(target_size(1)/2)]);
-                else
-                    Screen(window_ptr,'PutImage',imageData, ...
-                        [xcenter+110*3.625,ycenter-round(target_size(1)/2),xcenter+110*3.625+target_size(2),ycenter+round(target_size(1)/2)]);
-                end
+                arrow(matrixSize, window_ptr, this_trial.Location_Of, this_trial.Tar_Dir)
+                % imageData = target{this_trial.Tar_Dir,1};
+                % if this_trial.Location_Of == 1
+                %     Screen(window_ptr,'PutImage',imageData, ...
+                %         [xcenter-110*3.625-target_size(2),ycenter-round(target_size(1)/2),xcenter-110*3.625,ycenter+round(target_size(1)/2)]);
+                % else
+                %     Screen(window_ptr,'PutImage',imageData, ...
+                %         [xcenter+110*3.625,ycenter-round(target_size(1)/2),xcenter+110*3.625+target_size(2),ycenter+round(target_size(1)/2)]);
+                % end
                 vbl = Screen('Flip', window_ptr);
                 if isnan(tar_timestamp)
                     tar_timestamp = vbl; % tar offset;
                     tmp(trial_order, 3) = vbl - start_time;% tar onset;
                 end
             elseif timestamp >= mask_onset + 0.5 * ifi && timestamp < trial_end - 0.5 * ifi
-                imageData = mask1;
                 if this_trial.Location_Of == 1
-                    Screen(window_ptr,'PutImage',imageData, ...
-                        [xcenter-110*3.625-target_size(2),ycenter-round(target_size(1)/2),xcenter-110*3.625,ycenter+round(target_size(1)/2)]);
+                    Screen('FillRect', window_ptr, WhiteIndex(window_ptr), leftMatrixRect);
+                    % Screen(window_ptr,'PutImage',imageData, ...
+                    %     [xcenter+96*3,ycenter-round(cue_size(1)/2),xcenter+96*3+cue_size(2),ycenter+round(cue_size(1)/2)]);
                 else
-                    Screen(window_ptr,'PutImage',imageData, ...
-                        [xcenter+110*3.625,ycenter-round(target_size(1)/2),xcenter+110*3.625+target_size(2),ycenter+round(target_size(1)/2)]);
+                    Screen('FillRect', window_ptr, WhiteIndex(window_ptr), rightMatrixRect);
+                    % Screen(window_ptr,'PutImage',imageData, ...
+                    %     [xcenter-96*3-cue_size(2),ycenter-round(cue_size(1)/2),xcenter-96*3,ycenter+round(cue_size(1)/2)]);
                 end
+                % imageData = mask1;
+                % if this_trial.Location_Of == 1
+                %     Screen(window_ptr,'PutImage',imageData, ...
+                %         [xcenter-110*3.625-target_size(2),ycenter-round(target_size(1)/2),xcenter-110*3.625,ycenter+round(target_size(1)/2)]);
+                % else
+                %     Screen(window_ptr,'PutImage',imageData, ...
+                %         [xcenter+110*3.625,ycenter-round(target_size(1)/2),xcenter+110*3.625+target_size(2),ycenter+round(target_size(1)/2)]);
+                % end
                 vbl = Screen('Flip', window_ptr);
                 if isnan(mask_timestamp)
                     mask_timestamp = vbl; % tar offset;
@@ -226,7 +214,7 @@ try
             else
                 resp = valid_names{valid_codes == find(resp_code)};
             end
-            rt = resp_timestamp - mask_timestamp;
+            rt = resp_timestamp - tar_timestamp;
         end
         score = strcmp(rec.cresp(trial_order), resp);
         rec.onset_real(trial_order) = fixation_timestamp - start_time;
@@ -251,14 +239,78 @@ end
 % % enable character input and show mouse cursor
 % ListenChar;
 % ShowCursor;
-%
+% 
 % % ---- restore preferences ----
 % Screen('Preference', 'VisualDebugLevel', old_visdb);
 % Screen('Preference', 'SkipSyncTests', old_sync);
 % Screen('Preference', 'TextRenderer', old_text_render);
 % Priority(old_pri);
-%
+% 
 % if ~isempty(exception)
 %     rethrow(exception)
 % end
+end
+
+function arrow(matrixSize, window_ptr, loc, dir)
+[screenWidth, screenHeight] = Screen('WindowSize', window_ptr);
+ycenter = screenHeight / 2; 
+if loc == 1
+    xcenter = 0.3 * screenWidth;
+else
+    xcenter = 0.7 * screenWidth;
+end
+
+squ = [xcenter - matrixSize/2, ycenter - matrixSize/2, ...
+                  xcenter + matrixSize/2, ycenter + matrixSize/2];
+
+arrH1 = 0.9 * matrixSize;
+arrH2 = 0.4 * matrixSize;
+arrW1 = 0.8 * matrixSize;
+arrW2 = 0.15 * matrixSize;
+
+switch dir
+    case 1 % left arrow
+        arrowPoints = [
+            xcenter - arrH1/2,       ycenter          ; 
+            xcenter          ,       ycenter + arrW1/2; 
+            xcenter - arrH2/2,       ycenter + arrW2/2; 
+            xcenter + arrH1/2,       ycenter + arrW2/2;
+            xcenter + arrH1/2,       ycenter - arrW2/2;
+            xcenter - arrH2/2,       ycenter - arrW2/2;
+            xcenter          ,       ycenter - arrW1/2;
+        ];
+    case 2 % up arrow
+        arrowPoints = [
+            xcenter,                 ycenter - arrH1/2; 
+            xcenter - arrW1/2,       ycenter          ; 
+            xcenter - arrW2/2,       ycenter - arrH2/2; 
+            xcenter - arrW2/2,       ycenter + arrH1/2;
+            xcenter + arrW2/2,       ycenter + arrH1/2;
+            xcenter + arrW2/2,       ycenter - arrH2/2;
+            xcenter + arrW1/2,       ycenter          ;
+        ];
+    case 3 % down arrow
+        arrowPoints = [
+            xcenter,                 ycenter + arrH1/2; 
+            xcenter - arrW1/2,       ycenter          ; 
+            xcenter - arrW2/2,       ycenter + arrH2/2; 
+            xcenter - arrW2/2,       ycenter - arrH1/2;
+            xcenter + arrW2/2,       ycenter - arrH1/2;
+            xcenter + arrW2/2,       ycenter + arrH2/2;
+            xcenter + arrW1/2,       ycenter          ;
+        ];
+    case 4 % right arrow
+        arrowPoints = [
+            xcenter + arrH1/2,       ycenter          ; 
+            xcenter          ,       ycenter + arrW1/2; 
+            xcenter + arrH2/2,       ycenter + arrW2/2; 
+            xcenter - arrH1/2,       ycenter + arrW2/2;
+            xcenter - arrH1/2,       ycenter - arrW2/2;
+            xcenter + arrH2/2,       ycenter - arrW2/2;
+            xcenter          ,       ycenter - arrW1/2;
+        ];
+end
+
+Screen('FillRect', window_ptr, WhiteIndex(window_ptr), squ);
+Screen('FillPoly', window_ptr, BlackIndex(window_ptr), arrowPoints);
 end
