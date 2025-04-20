@@ -93,49 +93,49 @@ try
         %% -- Let3Back Task -- %%
         [accu, rec] = start_let3back(run, window_ptr, window_rect, 1);
         T=char(datetime("now","Format","MM-dd_HH.mm"));
-        TaskFile_name = sprintf('Sub%03d_%s_%s_run%d_Let3Back_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
+        TaskFile_name = sprintf('Sub%s_%s_%s_run%d_Let3Back_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
         output_name = fullfile(mainFolderPath, TaskFile_name);
         save(output_name, "accu", "rec");
 
         %% -- Stroop Task -- %%
         [accu, rec] = start_stroop(run, window_ptr, window_rect, 1);
         T=char(datetime("now","Format","MM-dd_HH.mm"));
-        TaskFile_name = sprintf('Sub%03d_%s_%s_run%d_Stroop_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
+        TaskFile_name = sprintf('Sub%s_%s_%s_run%d_Stroop_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
         output_name = fullfile(mainFolderPath, TaskFile_name);
         save(output_name, "accu", "rec");
 
         %% -- antisac Task -- %%
         [accu, rec] = start_antisac(run, window_ptr, window_rect, 1);
         T=char(datetime("now","Format","MM-dd_HH.mm"));
-        TaskFile_name = sprintf('Sub%03d_%s_%s_run%d_antisac_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
+        TaskFile_name = sprintf('Sub%s_%s_%s_run%d_antisac_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
         output_name = fullfile(mainFolderPath, TaskFile_name);
         save(output_name, "accu", "rec");
 
         %% -- ColShp Task -- %%
         [accu, rec] = start_colshp(window_ptr, window_rect, 1);
         T=char(datetime("now","Format","MM-dd_HH.mm"));
-        TaskFile_name = sprintf('Sub%03d_%s_%s_run%d_ColShp_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
+        TaskFile_name = sprintf('Sub%s_%s_%s_run%d_ColShp_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
         output_name = fullfile(mainFolderPath, TaskFile_name);
         save(output_name, "accu", "rec");
 
         %% -- Spt2Back Task -- %%
         [accu, rec] = start_spt2back(window_ptr, window_rect, 1);
         T=char(datetime("now","Format","MM-dd_HH.mm"));
-        TaskFile_name = sprintf('Sub%03d_%s_%s_run%d_Spt2Back_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
+        TaskFile_name = sprintf('Sub%s_%s_%s_run%d_Spt2Back_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
         output_name = fullfile(mainFolderPath, TaskFile_name);
         save(output_name, "accu", "rec");
 
         %% -- KeepTrack Task -- %%
-        [accu, rec] = start_keeptrack(run, window_ptr, window_rect, 1);
+        [accu, rec, dur] = start_keeptrack(run, window_ptr, window_rect, 1);
         T=char(datetime("now","Format","MM-dd_HH.mm"));
-        TaskFile_name = sprintf('Sub%03d_%s_%s_run%d_KeepTrack_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
+        TaskFile_name = sprintf('Sub%s_%s_%s_run%d_KeepTrack_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
         output_name = fullfile(mainFolderPath, TaskFile_name);
-        save(output_name, "accu", "rec");
+        save(output_name, "accu", "rec", "dur");
 
         %% -- SizeLife Task -- %%
         [accu, rec] = start_sizelife(run, window_ptr, window_rect, 1);
         T=char(datetime("now","Format","MM-dd_HH.mm"));
-        TaskFile_name = sprintf('Sub%03d_%s_%s_run%d_Cate_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
+        TaskFile_name = sprintf('Sub%s_%s_%s_run%d_Cate_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
         output_name = fullfile(mainFolderPath, TaskFile_name);
         save(output_name, "accu", "rec");
 
@@ -143,7 +143,7 @@ try
         % if run == 1
         [accu, rec, out_ssd] = start_stopsignal(run, window_ptr, window_rect);
         T=char(datetime("now","Format","MM-dd_HH.mm"));
-        TaskFile_name = sprintf('Sub%03d_%s_%s_run%d_SST_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
+        TaskFile_name = sprintf('Sub%s_%s_%s_run%d_SST_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
         output_name = fullfile(mainFolderPath, TaskFile_name);
         % out_ssd_place = sprintf('SST_config/Sub_ssd/Sub%03d_run%d_SST.mat', subconfig{1}, run);
         save(output_name, "accu", "rec", "out_ssd");

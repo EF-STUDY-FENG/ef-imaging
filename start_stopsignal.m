@@ -13,7 +13,7 @@ if nargin > 4 && prac == 1
     config = readtable(fullfile("config_prac", "stopsignal_prac.xlsx"));
 else
     TaskFile = sprintf('stopsignal_run%d.xlsx', run);
-    config = readtable(fullfile("config/stopsignal_config", TaskFile));
+    config = readtable(fullfile("config/stopsignal", TaskFile));
 end
 rec = config;
 rec.onset = (0:1.5:1.5*(height(config)-1))';
@@ -122,11 +122,8 @@ try
                 end
             end
             last_ssd(ssd_idx) = ssd;
-            if ssd_idx == 1
-                out_ssd(1) = ssd;
-            elseif ssd_idx == 2
-                out_ssd(2) = ssd;
-            end
+            out_ssd(ssd_idx) = ssd;
+            
         end
 
         % initialize responses

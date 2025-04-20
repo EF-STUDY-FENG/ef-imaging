@@ -13,7 +13,7 @@ if nargin > 3 && prac == 1
     config = readtable(fullfile("config_prac", "numlet_prac.xlsx"));
 else
     TaskFile = sprintf('numlet_run%d.xlsx', run);
-    config = readtable(fullfile("config/numlet_config", TaskFile));
+    config = readtable(fullfile("config/numlet", TaskFile));
 end
 rec = config;
 rec.onset_real = nan(height(config), 1);

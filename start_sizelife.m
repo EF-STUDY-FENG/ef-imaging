@@ -13,7 +13,7 @@ if nargin > 3 && prac == 1
     config = readtable(fullfile("config_prac", "sizelife_prac.xlsx"));
 else
     TaskFile = sprintf('sizelife_run%d.xlsx', run);
-    config = readtable(fullfile("config/sizelife_config", TaskFile));
+    config = readtable(fullfile("config/sizelife", TaskFile));
 end
 rec = config;
 rec.onset_real = nan(height(config), 1);

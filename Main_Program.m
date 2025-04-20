@@ -55,7 +55,7 @@ keys = struct( ...
     'exit', KbName('Escape'));
 
 % ---- seq config ---- 
-config = readtable(fullfile("config/main_program_config", 'seq.xlsx'));
+config = readtable(fullfile("config/main_program", 'seq.xlsx'));
 n = str2num(strjoin(config.run(str2double(subconfig{4}))));
         
 %%
@@ -106,7 +106,7 @@ try
     funcSeq = {@numlet, @let3back, @stroop, @antisac, @colshp, ...
                    @spt2back, @keeptrack, @sizelife, @stopsignal};
     
-    for idx = 7
+    for idx = 1:length(n)
         funcSeq{n(idx)}(str2double(subconfig{4}), subconfig, window_ptr, window_rect, runFolderPath);
     end
     

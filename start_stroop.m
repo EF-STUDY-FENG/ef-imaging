@@ -12,7 +12,7 @@ if nargin > 3 && prac == 1
     config = readtable(fullfile("config_prac", "stroop_prac.xlsx"));
 else
     TaskFile = sprintf('stroop_run%d.xlsx', run);
-    config = readtable(fullfile("config/stroop_config", TaskFile));
+    config = readtable(fullfile("config/stroop", TaskFile));
 end
 rec = config;
 rec.onset_real = nan(height(config), 1);

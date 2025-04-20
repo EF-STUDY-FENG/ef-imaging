@@ -12,18 +12,18 @@ function [accu, rec, dur, status, exception] = start_keeptrack(run, window_ptr, 
 status = 0;
 exception = [];
 accu = 0.00;
+dur = 0;
 % ---- configure sequence ----
 p.maxTri = 4;
-p.level = 4;
-p.offset = 85;
+p.level = 3;
 % Errors = 0;
-config = readtable(fullfile("config/keeptrack_config", 'keeptrack.xlsx'));
+config = readtable(fullfile("config/keeptrack", 'keeptrack.xlsx'));
 rec = table();
-rec.level = config.level;
+rec.level(p.level-2:p.level+1) = config.level(p.level-2:p.level+1);
 if nargin > 3 && prac == 1
-    rec.run = eval(sprintf('config.prac'));
+    rec.run(p.level-2:p.level+1) = eval(sprintf('config.prac(p.level-2:p.level+1)'));
 else
-    rec.run = eval(sprintf('config.run%d',run));
+    rec.run(p.level-2:p.level+1) = eval(sprintf('config.run%d(p.level-2:p.level+1)',run));
 end
 rec.score = nan(p.maxTri, 1);
 timing = struct( ...
@@ -203,7 +203,7 @@ try
                 underline(xPos, yPos, p.level, window_ptr, k, resp_list)
 
             end
-            
+            Screen('Flip', window_ptr);
             score = all(corr(:) ~= 0);
             rec.score(trial) = score;
             p.level = p.level + 1;
@@ -211,6 +211,7 @@ try
             break
         end
     end
+    
     accu = sum(rec{:, 3} == 1) / p.maxTri;
     Endtime = GetSecs;
     dur = Endtime - start;
