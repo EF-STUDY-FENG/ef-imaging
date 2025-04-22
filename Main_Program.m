@@ -1,37 +1,32 @@
 %%% ---- Folder Config  ---- %%%
-prompt = {'SubID:', 'Sex:', 'Name:', 'Run:'};
+prompt = {'SubID:', 'Run:'};
 dlgtitle = 'sub-config';
 num_lines = 1;
 % Check whether there are saved parameters
 if evalin('base', 'exist(''savedParams'', ''var'')')
     savedParams = evalin('base', 'savedParams');
-    definput = [savedParams(1:3)', {''}]; 
+    definput = [savedParams(1), {''}]; 
 else
     % For the first run, all parameters are set to empty by default
-    definput = {'', '', '', ''};
+    definput = {'', ''};
 end
 subconfig = inputdlg(prompt,dlgtitle,num_lines, definput);
 
 % If it is the first run, save the first three parameters to the base workspace
 if ~evalin('base', 'exist(''savedParams'', ''var'')')
-    assignin('base', 'savedParams', subconfig(1:3));
+    assignin('base', 'savedParams', subconfig(1));
 end
 
-mainFolderName = sprintf('Results/Sub%s_%s_%s', subconfig{1}, subconfig{2}, subconfig{3});
-mainFolderPath = fullfile(pwd, mainFolderName);
-if ~exist(mainFolderPath, 'dir') % Created Folder, if the folder does not exist
-    mkdir(mainFolderPath);
-end
-
-runFolderName = ['run', subconfig{4}];
-runFolderPath = fullfile(mainFolderPath, runFolderName);
-if ~exist(runFolderPath, 'dir')
-    mkdir(runFolderPath);
+outFolderName = 'Results';
+outFolderPath = fullfile(pwd, outFolderName);
+if ~exist(outFolderPath, 'dir') % Created Folder, if the folder does not exist
+    mkdir(outFolderPath);
 end
 
 % % ---- configure exception ----
 status = 0;
 exception = [];
+run = str2double(subconfig{2});
 
 % ---- configure screen and window ----
 % setup default level of 2
@@ -56,7 +51,7 @@ keys = struct( ...
 
 % ---- seq config ---- 
 config = readtable(fullfile("config/main_program", 'seq.xlsx'));
-n = str2num(strjoin(config.run(str2double(subconfig{4}))));
+n = str2num(strjoin(config.run(run)));
         
 %%
 early_exit = false;
@@ -72,12 +67,6 @@ try
     % set default font name
     Screen('TextFont', window_ptr, 'SimHei');
     Screen('TextSize', window_ptr, round(0.06 * RectHeight(window_rect)));
-    % get inter flip interval
-    % ifi = Screen('GetFlipInterval', window_ptr);
-    %
-    % % ---- configure stimuli ----
-    % ratio_size = 0.3;
-    % stim_window = [0, 0, RectWidth(window_rect), ratio_size * RectHeight(window_rect)];
 
     % ---- start '+' display ---- %
     DrawFormattedText(window_ptr, '+', 'center', 'center', WhiteIndex(window_ptr));
@@ -95,7 +84,8 @@ try
         % here we should detect for a key press and release
         [~, key_code] = KbStrokeWait(-1);
         if key_code(keys.start)
-            Screen('Flip',window_ptr);
+            vbl = Screen('Flip',window_ptr);
+            start = vbl;
             break
         elseif key_code(keys.exit)
             early_exit = true;
@@ -107,10 +97,13 @@ try
                    @spt2back, @keeptrack, @sizelife, @stopsignal};
     
     for idx = 1:length(n)
-        funcSeq{n(idx)}(str2double(subconfig{4}), subconfig, window_ptr, window_rect, runFolderPath);
+        funcSeq{n(idx)}(run, subconfig, window_ptr, window_rect, outFolderPath);
     end
     
     % ---- END Inst Display ---- %
+        endtime = GetSecs;
+        dur = endtime - start;
+        Screen('Flip', window_ptr);
         DrawFormattedText(window_ptr, double('请闭眼等待'), 'center', 'center', WhiteIndex(window_ptr));
         Screen('Flip', window_ptr);   % show stim, return flip time
         WaitSecs(3);
@@ -139,85 +132,107 @@ end
 
     %%% ---- Each Task Func ---- %%%
         %% -- NumLet Task -- %%
-        function  numlet(run, subconfig, window_ptr, window_rect, runFolderPath)
-        [accu, rec] = start_numlet(run, window_ptr, window_rect);
-        T=char(datetime("now","Format","MM-dd_HH.mm"));
-        TaskFile_name = sprintf('Sub%s_%s_%s_run%d_numlet_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
-        output_name = fullfile(runFolderPath, TaskFile_name);
-        save(output_name, "accu", "rec");
+        function  numlet(run, subconfig, window_ptr, window_rect, outFolderPath)
+        rec = start_numlet(run, window_ptr, window_rect);
+        save_task_data('numlet', rec, subconfig, outFolderPath);
         end
+        % function  numlet(run, subconfig, window_ptr, window_rect, runFolderPath)
+        % [accu, rec] = start_numlet(run, window_ptr, window_rect);
+        % T=char(datetime("now","Format","MM-dd_HH.mm"));
+        % TaskFile_name = sprintf('Sub%s_%s_%s_run%d_numlet_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
+        % output_name = fullfile(runFolderPath, TaskFile_name);
+        % save(output_name, "accu", "rec");
+        % end
     
         %% -- Let3Back Task -- %%
-        function  let3back(run, subconfig, window_ptr, window_rect, runFolderPath)
-        [accu, rec] = start_let3back(run, window_ptr, window_rect);
-        T=char(datetime("now","Format","MM-dd_HH.mm"));
-        TaskFile_name = sprintf('Sub%s_%s_%s_run%d_let3back_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
-        output_name = fullfile(runFolderPath, TaskFile_name);
-        save(output_name, "accu", "rec");
+        function  let3back(run, subconfig, window_ptr, window_rect, outFolderPath)
+        rec = start_let3back(run, window_ptr, window_rect);
+        save_task_data('let3back', rec, subconfig, outFolderPath);
         end
+        % function  let3back(run, subconfig, window_ptr, window_rect, runFolderPath)
+        % [accu, rec] = start_let3back(run, window_ptr, window_rect);
+        % T=char(datetime("now","Format","MM-dd_HH.mm"));
+        % TaskFile_name = sprintf('Sub%s_%s_%s_run%d_let3back_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
+        % output_name = fullfile(runFolderPath, TaskFile_name);
+        % save(output_name, "accu", "rec");
+        % end
 
         %% -- Stroop Task -- %%
-        function  stroop(run, subconfig, window_ptr, window_rect, runFolderPath)
-        [accu, rec] = start_stroop(run, window_ptr, window_rect);
-        T=char(datetime("now","Format","MM-dd_HH.mm"));
-        TaskFile_name = sprintf('Sub%s_%s_%s_run%d_stroop_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
-        output_name = fullfile(runFolderPath, TaskFile_name);
-        save(output_name, "accu", "rec");
+        function  stroop(run, subconfig, window_ptr, window_rect, outFolderPath)
+        rec = start_stroop(run, window_ptr, window_rect);
+        save_task_data('stroop', rec, subconfig, outFolderPath);
         end
+        % function  stroop(run, subconfig, window_ptr, window_rect, runFolderPath)
+        % [accu, rec] = start_stroop(run, window_ptr, window_rect);
+        % T=char(datetime("now","Format","MM-dd_HH.mm"));
+        % TaskFile_name = sprintf('Sub%s_%s_%s_run%d_stroop_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
+        % output_name = fullfile(runFolderPath, TaskFile_name);
+        % save(output_name, "accu", "rec");
+        % end
 
-        %% -- antisac Task -- %%
-        function  antisac(run, subconfig, window_ptr, window_rect, runFolderPath)
-        [accu, rec] = start_antisac(run, window_ptr, window_rect);
-        T=char(datetime("now","Format","MM-dd_HH.mm"));
-        TaskFile_name = sprintf('Sub%s_%s_%s_run%d_antisac_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
-        output_name = fullfile(runFolderPath, TaskFile_name);
-        save(output_name, "accu", "rec");
+        %% -- AntiSac Task -- %%S
+        function  antisac(run, subconfig, window_ptr, window_rect, outFolderPath)
+        rec = start_antisac(run, window_ptr, window_rect);
+        save_task_data('antisac', rec, subconfig, outFolderPath);
         end
 
         %% -- ColShp Task -- %%
-        function  colshp(run, subconfig, window_ptr, window_rect, runFolderPath)
-        [accu, rec] = start_colshp(window_ptr, window_rect);
-        T=char(datetime("now","Format","MM-dd_HH.mm"));
-        TaskFile_name = sprintf('Sub%s_%s_%s_run%d_colshp_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
-        output_name = fullfile(runFolderPath, TaskFile_name);
-        save(output_name, "accu", "rec");
+        function  colshp(run, subconfig, window_ptr, window_rect, outFolderPath)
+        rec = start_colshp(run, window_ptr, window_rect);
+        save_task_data('colshp', rec, subconfig, outFolderPath);
         end
+        % function  colshp(run, subconfig, window_ptr, window_rect, runFolderPath)
+        % [accu, rec] = start_colshp(window_ptr, window_rect);
+        % T=char(datetime("now","Format","MM-dd_HH.mm"));
+        % TaskFile_name = sprintf('Sub%s_%s_%s_run%d_colshp_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
+        % output_name = fullfile(runFolderPath, TaskFile_name);
+        % save(output_name, "accu", "rec");
+        % end
 
         %% -- Spt2Back Task -- %%
-        function  spt2back(run, subconfig, window_ptr, window_rect, runFolderPath)
-        [accu, rec] = start_spt2back(window_ptr, window_rect);
-        T=char(datetime("now","Format","MM-dd_HH.mm"));
-        TaskFile_name = sprintf('Sub%s_%s_%s_run%d_spt2back_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
-        output_name = fullfile(runFolderPath, TaskFile_name);
-        save(output_name, "accu", "rec");
+        function  spt2back(run, subconfig, window_ptr, window_rect, outFolderPath)
+        rec = start_spt2back(run, window_ptr, window_rect);
+        save_task_data('spt2back', rec, subconfig, outFolderPath);
         end
+        % function  spt2back(run, subconfig, window_ptr, window_rect, runFolderPath)
+        % [accu, rec] = start_spt2back(window_ptr, window_rect);
+        % T=char(datetime("now","Format","MM-dd_HH.mm"));
+        % TaskFile_name = sprintf('Sub%s_%s_%s_run%d_spt2back_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
+        % output_name = fullfile(runFolderPath, TaskFile_name);
+        % save(output_name, "accu", "rec");
+        % end
 
         %% -- KeepTrack Task -- %%
-        function  keeptrack(run, subconfig, window_ptr, window_rect, runFolderPath)
-        [accu, rec, dur] = start_keeptrack(run, window_ptr, window_rect);
-        T=char(datetime("now","Format","MM-dd_HH.mm"));
-        TaskFile_name = sprintf('Sub%s_%s_%s_run%d_keeptrack_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
-        output_name = fullfile(runFolderPath, TaskFile_name);
-        save(output_name, "accu", "rec", "dur");
+        function  keeptrack(run, subconfig, window_ptr, window_rect, outFolderPath)
+        rec = start_keeptrack(run, window_ptr, window_rect);
+        save_task_data('keeptrack', rec, subconfig, outFolderPath);
         end
+        % function  keeptrack(run, subconfig, window_ptr, window_rect, runFolderPath)
+        % [accu, rec, dur] = start_keeptrack(run, window_ptr, window_rect);
+        % T=char(datetime("now","Format","MM-dd_HH.mm"));
+        % TaskFile_name = sprintf('Sub%s_%s_%s_run%d_keeptrack_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
+        % output_name = fullfile(runFolderPath, TaskFile_name);
+        % save(output_name, "accu", "rec", "dur");
+        % end
 
         %% -- SizeLife Task -- %%
-        function  sizelife(run, subconfig, window_ptr, window_rect, runFolderPath)
-        [accu, rec] = start_sizelife(run, window_ptr, window_rect);
-        T=char(datetime("now","Format","MM-dd_HH.mm"));
-        TaskFile_name = sprintf('Sub%s_%s_%s_run%d_sizelife_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
-        output_name = fullfile(runFolderPath, TaskFile_name);
-        save(output_name, "accu", "rec");
+        function  sizelife(run, subconfig, window_ptr, window_rect, outFolderPath)
+        rec = start_sizelife(run, window_ptr, window_rect);
+        save_task_data('sizelife', rec, subconfig, outFolderPath);
         end
+        % function  sizelife(run, subconfig, window_ptr, window_rect, runFolderPath)
+        % [accu, rec] = start_sizelife(run, window_ptr, window_rect);
+        % T=char(datetime("now","Format","MM-dd_HH.mm"));
+        % TaskFile_name = sprintf('Sub%s_%s_%s_run%d_sizelife_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
+        % output_name = fullfile(runFolderPath, TaskFile_name);
+        % save(output_name, "accu", "rec");
+        % end
 
         %% -- Stop Signal Task -- %%
-        function  stopsignal(run, subconfig, window_ptr, window_rect, runFolderPath)
+        function  stopsignal(run, subconfig, window_ptr, window_rect, outFolderPath)
         if run == 1
-            [accu, rec, out_ssd] = start_stopsignal(run, window_ptr, window_rect);
-            T=char(datetime("now","Format","MM-dd_HH.mm"));
-            TaskFile_name = sprintf('Sub%s_%s_%s_run%d_SST_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
-            output_name = fullfile(runFolderPath, TaskFile_name);
-            save(output_name, "accu", "rec", "out_ssd");
+            [rec, out_ssd] = start_stopsignal(run, window_ptr, window_rect);
+            save_task_data('stopsignal', rec, subconfig, outFolderPath);
             % save ssd to next run
             out_ssd_folder = sprintf('stimuli/stopsignal_ssd/Sub%s', subconfig{1});  
             if ~exist(out_ssd_folder, 'dir')
@@ -230,17 +245,23 @@ end
             init_ssd_place = sprintf('stimuli/stopsignal_ssd/Sub%s/run%d.mat', subconfig{1}, run-1);
             load(init_ssd_place, "out_ssd");
             init_ssd = out_ssd;
-            [accu, rec, out_ssd] = start_stopsignal(run, window_ptr, window_rect, init_ssd);
-            T=char(datetime("now","Format","MM-dd_HH.mm"));
-            TaskFile_name = sprintf('Sub%s_%s_%s_run%d_SST_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
-            output_name = fullfile(runFolderPath, TaskFile_name);
+            [rec, out_ssd] = start_stopsignal(run, window_ptr, window_rect, init_ssd);
+            save_task_data('stopsignal', rec, subconfig, outFolderPath);
             out_ssd_place = sprintf('stimuli/stopsignal_ssd/Sub%s/run%d.mat', subconfig{1}, run);
-            save(output_name, "accu", "rec", "out_ssd");
             save(out_ssd_place, "out_ssd");
         end
         end
 
         
 
+function save_task_data(task_name, rec, subconfig, outFolderPath)
 
+    run = subconfig{2};
+    filename = sprintf('sub-%s_task-%s_run-%s_events.tsv',...
+        subconfig{1}, task_name, run);
+
+    writetable(rec, fullfile(outFolderPath, filename),...
+        'FileType', 'text',...
+        'Delimiter', '\t');
+end
 

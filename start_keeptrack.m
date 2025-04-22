@@ -1,17 +1,12 @@
-function [accu, rec, dur, status, exception] = start_keeptrack(run, window_ptr, window_rect, prac)
+function [rec, dur, status, exception] = start_keeptrack(run, window_ptr, window_rect, prac)
 % arguments
 %     opts.SkipSyncTests (1, 1) {mustBeNumericOrLogical} = false
 % end
-    % [keyIsDown, ~, keyCode] = KbCheck;
-    % keyCode = find(keyCode, 1);
-    % if keyIsDown
-    %     ignoreKey=keyCode;
-    %     DisableKeysForKbCheck(ignoreKey);
-    % end
+
 % ---- configure exception ----
 status = 0;
 exception = [];
-accu = 0.00;
+% accu = 0.00;
 dur = 0;
 % ---- configure sequence ----
 p.maxTri = 4;
@@ -19,31 +14,16 @@ p.level = 3;
 % Errors = 0;
 config = readtable(fullfile("config/keeptrack", 'keeptrack.xlsx'));
 rec = table();
-rec.level(p.level-2:p.level+1) = config.level(p.level-2:p.level+1);
+rec.level(1:4) = config.level(1:4);
 if nargin > 3 && prac == 1
-    rec.run(p.level-2:p.level+1) = eval(sprintf('config.prac(p.level-2:p.level+1)'));
+    rec.run(1:4) = eval(sprintf('config.prac(1:4)'));
 else
-    rec.run(p.level-2:p.level+1) = eval(sprintf('config.run%d(p.level-2:p.level+1)',run));
+    rec.run(1:4) = eval(sprintf('config.run%d(1:4)',run));
 end
 rec.score = nan(p.maxTri, 1);
 timing = struct( ...
     'iti', 1.0, ... % inter-trial-interval
     'tdur', 0.5); % trial duration
-
-% % ---- configure screen and window ----
-% % setup default level of 2
-% PsychDefaultSetup(2);
-% % screen selection
-% screen = max(Screen('Screens'));
-% % set the start up screen to black
-% old_visdb = Screen('Preference', 'VisualDebugLevel', 1);
-% % sync tests are recommended but may fail
-% old_sync = Screen('Preference', 'SkipSyncTests', 1);
-% % use FTGL text plugin
-% old_text_render = Screen('Preference', 'TextRenderer', 1);
-% % set priority to the top
-% old_pri = Priority(MaxPriority(screen));
-% % PsychDebugWindowConfiguration([], 0.1);
 
 % ---- keyboard settings ----
 keys = struct( ...
@@ -54,24 +34,14 @@ keys = struct( ...
     'num3', KbName('3#'), ...
     'num4', KbName('4$'));
 
+
 % ---- stimuli presentation ----
 % the flag to determine if the experiment should exit early
 early_exit = false;
 try
-    % open a window and set its background color as black
-    % [window_ptr, window_rect] = PsychImaging('OpenWindow', screen, BlackIndex(screen));
+    % get screen center
     [~, ycenter] = RectCenter(window_rect);
     screenWidth = window_rect(3);
-    % % disable character input and hide mouse cursor
-    % ListenChar(2);
-    % HideCursor;
-    % % set blending function
-    % Screen('BlendFunction', window_ptr, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    % 
-    % % set default font name
-    % Screen('TextFont', window_ptr, 'SimHei');
-    % Screen('TextSize', window_ptr, round(0.06 * RectHeight(window_rect)));
-
 
     % display welcome/instr screen and wait for a press of 's' to start
     Inst = imread('Instruction\keeptrack.jpg');
@@ -81,31 +51,21 @@ try
     WaitSecs(4.5);
     vbl = Screen('Flip',window_ptr); 
     WaitSecs(0.5);
-    start = vbl + 0.5;
-
-    % [keyIsDown, ~, keyCode] = KbCheck;
-    % keyCode = find(keyCode, 1);
-    % if keyIsDown
-    %     ignoreKey=keyCode;
-    %     DisableKeysForKbCheck(ignoreKey);
-    % end
-    % while ~early_exit
-    %     % here we should detect for a key press and release
-    %     [~, key_code] = KbStrokeWait(-1);
-    %     if key_code(keys.start)
-    %         % start_time = resp_timestamp;
-    %         WaitSecs(5);
-    %         break
-    %     elseif key_code(keys.exit)
-    %         early_exit = true;
-    %     end
-    % end
+    start_time = vbl + 0.5;
 
     % main experiment
     for trial = 1:p.maxTri
         if early_exit
             break
         end
+
+        this_trial = zeros(1, 2);
+        this_trial(1) = config.onset(trial);
+        this_trial(2) = config.ans_time(trial);
+
+        % initialize stimulus timestamps
+        ans_onset = start_time + this_trial(1) + p.level*3;
+        trial_end = ans_onset + this_trial(2);
 
         % initialize responses
         corr = [];
@@ -144,18 +104,9 @@ try
                 early_exit = true;
             end
             % ---- configure stimuli ----
-            if p.level <= 7
-                xPos = linspace(screenWidth*0.3, screenWidth*0.7, p.level);
-                yPos = ones(1, p.level) * ycenter;
-            else
-                xPos = [linspace(screenWidth*0.3, screenWidth*0.7, 6),...
-                        linspace(screenWidth*0.3, screenWidth*0.7, p.level-6)];
-                yPos = [ones(1,6)*(ycenter-100),...  
-                        ones(1,p.level-6)*(ycenter+100)];
-            end
-            
-            
-                
+            xPos = linspace(screenWidth*0.3, screenWidth*0.7, p.level);
+            yPos = ones(1, p.level) * ycenter;
+        
             for j = randOrder
                 [~, ~, key_code] = KbCheck(-1);
                 if key_code(keys.exit)
@@ -181,13 +132,24 @@ try
             end
             break
         end
-        while ~early_exit    
+        while ~early_exit  
+            timeout = false;
             for k = 1:p.level
-                [resp_code, window_ptr] = Flashing_U(xPos, yPos, ycenter, p.level, window_ptr, k, resp_list);
-                if resp_code(keys.exit)
+                if GetSecs - ans_onset >= this_trial(2)
+                    timeout = true;
+                    break;
+                end
+                remaining_time = this_trial(2) - (GetSecs - ans_onset);
+                [resp_code,timed_out, window_ptr] = Flashing_U( ...
+                    xPos, yPos, ycenter, p.level, window_ptr, k, resp_list, remaining_time);
+                if any(resp_code(keys.exit))
                     early_exit = true;
-                end 
-
+                    timeout = true;
+                    break;
+                elseif timed_out
+                    timeout = true;
+                    break;
+                end
                 valid_names_1 = {'num1', 'num2', 'num3', 'num4'};
                 valid_names = [1, 2, 3, 4];
                 valid_codes = cellfun(@(x) keys.(x), valid_names_1);
@@ -203,40 +165,29 @@ try
                 underline(xPos, yPos, p.level, window_ptr, k, resp_list)
 
             end
-            Screen('Flip', window_ptr);
-            score = all(corr(:) ~= 0);
-            rec.score(trial) = score;
+            if timeout
+                rec.score(trial) = 0;
+            else
+                score = all(corr ~= 0);
+                rec.score(trial) = score;
+            end
+            vbl = Screen('Flip', window_ptr);
+            if vbl < trial_end
+                WaitSecs(trial_end - vbl);
+            end
             p.level = p.level + 1;
-
             break
         end
     end
-    
-    accu = sum(rec{:, 3} == 1) / p.maxTri;
+    % accu = sum(rec{:, 3} == 1) / p.maxTri;
     Endtime = GetSecs;
-    dur = Endtime - start;
+    dur = Endtime - start_time;
         
 
 catch exception
     status = -1;
 end
 
-% % --- post presentation jobs
-% Screen('Close');
-% sca;
-% % enable character input and show mouse cursor
-% ListenChar;
-% ShowCursor;
-% 
-% % ---- restore preferences ----
-% Screen('Preference', 'VisualDebugLevel', old_visdb);
-% Screen('Preference', 'SkipSyncTests', old_sync);
-% Screen('Preference', 'TextRenderer', old_text_render);
-% Priority(old_pri);
-% 
-% if ~isempty(exception)
-%     rethrow(exception)
-% end
 end
 
 function underline(xPos, yPos, level, window_ptr, places, resp_list)
@@ -274,7 +225,12 @@ function underline(xPos, yPos, level, window_ptr, places, resp_list)
     
 end
 
-function [keyCode, window_ptr] = Flashing_U(xPos, yPos, ycenter, level, window_ptr, current, resp_list)
+function [keyCode,timed_out, window_ptr] = Flashing_U( ...
+    xPos, yPos, ycenter, level, window_ptr, current, resp_list,remaining_time)
+    keys = struct( ...
+    'exit', KbName('Escape'));
+    timed_out = false;
+
     exampleNum = '0';
     bounds = Screen('TextBounds', window_ptr, exampleNum);
     textWidth = bounds(3); 
@@ -289,11 +245,15 @@ function [keyCode, window_ptr] = Flashing_U(xPos, yPos, ycenter, level, window_p
     end
 
     start_time = GetSecs;
+    end_time = start_time + remaining_time; 
     visibility = true;
     keyIsDown = false;
     early_exit = false;
-    while ~keyIsDown && ~early_exit
+    while ~keyIsDown && GetSecs < end_time && ~early_exit
         [keyIsDown, ~, keyCode] = KbCheck;
+        if keyCode(keys.exit)
+            early_exit = true;
+        end 
 
         Screen('FillRect', window_ptr, BlackIndex(window_ptr));
         instr_1 = sprintf('请输入位置 %d 的数字', current);
@@ -314,8 +274,11 @@ function [keyCode, window_ptr] = Flashing_U(xPos, yPos, ycenter, level, window_p
         if GetSecs - start_time >= 0.5
             visibility = ~visibility;
             start_time = GetSecs; % reset timer
-        end
-        
+        end     
+    end
+
+    if GetSecs >= end_time && ~keyIsDown
+        timed_out = true;
     end
     KbReleaseWait
 end

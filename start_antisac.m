@@ -1,9 +1,9 @@
-function [accu, rec, status, exception] = start_antisac(run, window_ptr, window_rect, prac)
+function [rec, status, exception] = start_antisac(run, window_ptr, window_rect, prac)
 
 % ---- configure exception ----
 status = 0;
 exception = [];
-accu = 0.00;
+% accu = 0.00;
 
 % ---- configure sequence ----
 if nargin > 3 && prac == 1
@@ -82,20 +82,18 @@ try
         mask_onset = tar_onset + timing.tar_dur;
         trial_end = mask_onset + timing.tdur;
         fixation_timestamp = nan;
-        % cue_timestamp = nan;
         tar_timestamp = nan;
-        % mask_timestamp = nan;
 
-
-        % now present stimuli and check user's response
-
+        % now present stimuli
+        % present the fixation '+'
         DrawFormattedText(window_ptr, '+', 'center', 'center', WhiteIndex(window_ptr));
         vbl = Screen('Flip', window_ptr, fixation_onset+0.5*ifi);
         if isnan(fixation_timestamp)
             fixation_timestamp = vbl;
-            tmp(trial_order, 1) = vbl - start_time;
+            tmp(trial_order, 1) = vbl - start_time; % fixation onset
         end
         
+        % present a gray square as cue
         if this_trial.Location_Of == 1
             Screen('FillRect', window_ptr, GrayIndex(window_ptr), rightMatrixRect);
         else
@@ -103,8 +101,9 @@ try
         end
         vbl = Screen('Flip', window_ptr, cue_onset+0.5*ifi);
         
-        tmp(trial_order, 2) = vbl - start_time;% cue onset;
-
+        tmp(trial_order, 2) = vbl - start_time; % cue onset;
+        
+        % check user's response
         while ~early_exit
             [key_pressed, timestamp, key_code] = KbCheck(-1);
             if key_code(keys.exit)
@@ -125,21 +124,22 @@ try
                 break
             end
             if timestamp >= tar_onset + 0.5 * ifi && timestamp < mask_onset - 0.5 * ifi
+                % present a arrow as target
                 arrow(matrixSize, window_ptr, this_trial.Location_Of, this_trial.Tar_Dir)
                 vbl = Screen('Flip', window_ptr);
                 if isnan(tar_timestamp)
-                    tar_timestamp = vbl; % tar offset;
-                    tmp(trial_order, 3) = vbl - start_time;% tar onset;
+                    tar_timestamp = vbl;
+                    tmp(trial_order, 3) = vbl - start_time; % tar onset;
                 end
             elseif timestamp >= mask_onset + 0.5 * ifi && timestamp < trial_end - 0.5 * ifi
+                % present a white square as mask to block the target
                 if this_trial.Location_Of == 1
                     Screen('FillRect', window_ptr, WhiteIndex(window_ptr), leftMatrixRect);
                 else
                     Screen('FillRect', window_ptr, WhiteIndex(window_ptr), rightMatrixRect);
                 end
                 vbl = Screen('Flip', window_ptr);
-                tmp(trial_order, 4) = vbl - start_time;% tar onset;
-                % end
+                tmp(trial_order, 4) = vbl - start_time; % mask onset;
             end
         end
 
@@ -166,10 +166,7 @@ try
 
 
     end
-    accu = sum(rec{:, 10} == 1) / height(config);
-
-
-
+    % accu = sum(rec{:, 10} == 1) / height(config);
 
 catch exception
     status = -1;
