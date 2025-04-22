@@ -96,7 +96,7 @@ try
     funcSeq = {@numlet, @let3back, @stroop, @antisac, @colshp, ...
                    @spt2back, @keeptrack, @sizelife, @stopsignal};
     
-    for idx = 1:length(n)
+    for idx = 6%:length(n)
         funcSeq{n(idx)}(run, subconfig, window_ptr, window_rect, outFolderPath);
     end
     
@@ -136,39 +136,18 @@ end
         rec = start_numlet(run, window_ptr, window_rect);
         save_task_data('numlet', rec, subconfig, outFolderPath);
         end
-        % function  numlet(run, subconfig, window_ptr, window_rect, runFolderPath)
-        % [accu, rec] = start_numlet(run, window_ptr, window_rect);
-        % T=char(datetime("now","Format","MM-dd_HH.mm"));
-        % TaskFile_name = sprintf('Sub%s_%s_%s_run%d_numlet_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
-        % output_name = fullfile(runFolderPath, TaskFile_name);
-        % save(output_name, "accu", "rec");
-        % end
     
         %% -- Let3Back Task -- %%
         function  let3back(run, subconfig, window_ptr, window_rect, outFolderPath)
         rec = start_let3back(run, window_ptr, window_rect);
         save_task_data('let3back', rec, subconfig, outFolderPath);
         end
-        % function  let3back(run, subconfig, window_ptr, window_rect, runFolderPath)
-        % [accu, rec] = start_let3back(run, window_ptr, window_rect);
-        % T=char(datetime("now","Format","MM-dd_HH.mm"));
-        % TaskFile_name = sprintf('Sub%s_%s_%s_run%d_let3back_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
-        % output_name = fullfile(runFolderPath, TaskFile_name);
-        % save(output_name, "accu", "rec");
-        % end
 
         %% -- Stroop Task -- %%
         function  stroop(run, subconfig, window_ptr, window_rect, outFolderPath)
         rec = start_stroop(run, window_ptr, window_rect);
         save_task_data('stroop', rec, subconfig, outFolderPath);
         end
-        % function  stroop(run, subconfig, window_ptr, window_rect, runFolderPath)
-        % [accu, rec] = start_stroop(run, window_ptr, window_rect);
-        % T=char(datetime("now","Format","MM-dd_HH.mm"));
-        % TaskFile_name = sprintf('Sub%s_%s_%s_run%d_stroop_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
-        % output_name = fullfile(runFolderPath, TaskFile_name);
-        % save(output_name, "accu", "rec");
-        % end
 
         %% -- AntiSac Task -- %%S
         function  antisac(run, subconfig, window_ptr, window_rect, outFolderPath)
@@ -181,52 +160,24 @@ end
         rec = start_colshp(run, window_ptr, window_rect);
         save_task_data('colshp', rec, subconfig, outFolderPath);
         end
-        % function  colshp(run, subconfig, window_ptr, window_rect, runFolderPath)
-        % [accu, rec] = start_colshp(window_ptr, window_rect);
-        % T=char(datetime("now","Format","MM-dd_HH.mm"));
-        % TaskFile_name = sprintf('Sub%s_%s_%s_run%d_colshp_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
-        % output_name = fullfile(runFolderPath, TaskFile_name);
-        % save(output_name, "accu", "rec");
-        % end
 
         %% -- Spt2Back Task -- %%
         function  spt2back(run, subconfig, window_ptr, window_rect, outFolderPath)
         rec = start_spt2back(run, window_ptr, window_rect);
         save_task_data('spt2back', rec, subconfig, outFolderPath);
         end
-        % function  spt2back(run, subconfig, window_ptr, window_rect, runFolderPath)
-        % [accu, rec] = start_spt2back(window_ptr, window_rect);
-        % T=char(datetime("now","Format","MM-dd_HH.mm"));
-        % TaskFile_name = sprintf('Sub%s_%s_%s_run%d_spt2back_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
-        % output_name = fullfile(runFolderPath, TaskFile_name);
-        % save(output_name, "accu", "rec");
-        % end
 
         %% -- KeepTrack Task -- %%
         function  keeptrack(run, subconfig, window_ptr, window_rect, outFolderPath)
         rec = start_keeptrack(run, window_ptr, window_rect);
         save_task_data('keeptrack', rec, subconfig, outFolderPath);
         end
-        % function  keeptrack(run, subconfig, window_ptr, window_rect, runFolderPath)
-        % [accu, rec, dur] = start_keeptrack(run, window_ptr, window_rect);
-        % T=char(datetime("now","Format","MM-dd_HH.mm"));
-        % TaskFile_name = sprintf('Sub%s_%s_%s_run%d_keeptrack_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
-        % output_name = fullfile(runFolderPath, TaskFile_name);
-        % save(output_name, "accu", "rec", "dur");
-        % end
 
         %% -- SizeLife Task -- %%
         function  sizelife(run, subconfig, window_ptr, window_rect, outFolderPath)
         rec = start_sizelife(run, window_ptr, window_rect);
         save_task_data('sizelife', rec, subconfig, outFolderPath);
         end
-        % function  sizelife(run, subconfig, window_ptr, window_rect, runFolderPath)
-        % [accu, rec] = start_sizelife(run, window_ptr, window_rect);
-        % T=char(datetime("now","Format","MM-dd_HH.mm"));
-        % TaskFile_name = sprintf('Sub%s_%s_%s_run%d_sizelife_%s.mat', subconfig{1}, subconfig{2}, subconfig{3}, run, T);
-        % output_name = fullfile(runFolderPath, TaskFile_name);
-        % save(output_name, "accu", "rec");
-        % end
 
         %% -- Stop Signal Task -- %%
         function  stopsignal(run, subconfig, window_ptr, window_rect, outFolderPath)

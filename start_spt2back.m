@@ -1,4 +1,4 @@
-function [rec, status, exception] = start_spt2back(run, window_ptr, window_rect, prac)
+function [rec,dur , status, exception] = start_spt2back(run, window_ptr, window_rect, prac)
 
 % ---- configure exception ----
 status = 0;
@@ -94,6 +94,7 @@ try
     Screen('FrameRect', window_ptr, 255, rects, 3);
     start = Screen('Flip', window_ptr);
     WaitSecs(timing.tdur);
+    start = start + timing.tdur;
 
     for trial_order = 1:p.nTrial
         if early_exit
@@ -108,7 +109,7 @@ try
         resp_code = nan;
 
         % initialize stimulus timestamps
-        stim_onset = start + timing.iti + this_trial.onset;
+        stim_onset = start + this_trial.onset;
         stim_offset = stim_onset + timing.tdur;
         trial_end = stim_offset + timing.iti;
         onset_timestamp = nan;
@@ -163,12 +164,15 @@ try
             rt = resp_timestamp - onset_timestamp;
         end
         score = strcmp(rec.cresp(trial_order), resp);
-        rec.onset_real(trial_order) = onset_timestamp - start+timing.iti-3;
+        rec.onset_real(trial_order) = onset_timestamp - start;
         rec.resp{trial_order} = resp;
         rec.rt(trial_order) = rt;
         rec.cort(trial_order) = score;
     end
     % accu = sum(rec{:, 7} == 1) / (p.nTrial - p.nback);
+    endtime = GetSecs;
+    dur = endtime - start;
+    disp(dur);
     
 catch exception
     status = -1;
