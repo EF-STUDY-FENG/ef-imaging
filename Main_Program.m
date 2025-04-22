@@ -96,7 +96,7 @@ try
     funcSeq = {@numlet, @let3back, @stroop, @antisac, @colshp, ...
                    @spt2back, @keeptrack, @sizelife, @stopsignal};
     
-    for idx = 6%:length(n)
+    for idx = 1:length(n)
         funcSeq{n(idx)}(run, subconfig, window_ptr, window_rect, outFolderPath);
     end
     
