@@ -1,4 +1,4 @@
-function [rec, status, exception] = start_numlet(run, window_ptr, window_rect, prac)
+function [rec, status, exception] = start_numlet(run, start, rti, window_ptr, window_rect, prac)
 
 % ---- configure exception ----
 status = 0;
@@ -6,12 +6,13 @@ exception = [];
 % accu = 0.00;
 
 % ---- configure sequence ---- %
-if nargin > 3 && prac == 1
+if nargin > 5 && prac == 1
     config = readtable(fullfile("config_prac", "numlet_prac.xlsx"));
 else
     TaskFile = sprintf('numlet_run%d.xlsx', run);
     config = readtable(fullfile("config/numlet", TaskFile));
 end
+config.onset = config.onset + rti;
 rec = config;
 rec.onset_real = nan(height(config), 1);
 rec.resp_raw = cell(height(config), 1);
@@ -44,15 +45,15 @@ try
     stim_window = [0, 0, RectWidth(window_rect), ratio_size * RectHeight(window_rect)];
     SquareFig = [0 0 250 100];
 
-   % display welcome/instr screen and wait for a press of 's' to start
-    Inst = imread('Instruction\numlet.jpg');
-    tex = Screen('MakeTexture',window_ptr, Inst);
-    Screen('DrawTexture', window_ptr, tex);
-    Screen('Flip', window_ptr);   % show stim, return flip time
-    WaitSecs(4.5);
-    vbl = Screen('Flip', window_ptr); 
-    WaitSecs(0.5);
-    start_time = vbl + 0.5;
+   % % display welcome/instr screen and wait for a press of 's' to start
+   %  Inst = imread('Instruction\numlet.jpg');
+   %  tex = Screen('MakeTexture',window_ptr, Inst);
+   %  Screen('DrawTexture', window_ptr, tex);
+   %  Screen('Flip', window_ptr);   % show stim, return flip time
+   %  WaitSecs(4.5);
+   %  vbl = Screen('Flip', window_ptr); 
+   %  WaitSecs(0.5);
+   %  start_time = vbl + 0.5;
 
     % main experiment
     for trial_order = 1:height(config)
@@ -67,7 +68,7 @@ try
         resp_code = nan;
 
         % initialize stimulus timestamps
-        stim_onset = start_time + this_trial.onset;
+        stim_onset = start + this_trial.onset;
         stim_offset = stim_onset + timing.tdur;
         trial_end = stim_offset + timing.iti;
         onset_timestamp = nan;
@@ -134,7 +135,7 @@ try
             rt = resp_timestamp - onset_timestamp;
         end
         score = strcmp(rec.cresp(trial_order), resp);
-        rec.onset_real(trial_order) = onset_timestamp - start_time;
+        rec.onset_real(trial_order) = onset_timestamp - start;
         rec.resp_raw{trial_order} = resp_raw;
         rec.resp{trial_order} = resp;
         rec.rt(trial_order) = rt;
