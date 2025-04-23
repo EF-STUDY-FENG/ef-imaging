@@ -38,19 +38,19 @@ try
     [xcenter, ycenter] = RectCenter(window_rect);
     % get inter flip interval
     ifi = Screen('GetFlipInterval', window_ptr);
-    % 
+    %
     % % ---- configure stimuli ----
     ratio_size = 0.3;
     stim_window = [0, 0, RectWidth(window_rect), ratio_size * RectHeight(window_rect)];
     SquareFig = [0 0 250 100];
 
-   % display welcome/instr screen and wait for a press of 's' to start
+    % display welcome/instr screen and wait for a press of 's' to start
     Inst = imread('Instruction\numlet.jpg');
     tex = Screen('MakeTexture',window_ptr, Inst);
     Screen('DrawTexture', window_ptr, tex);
     Screen('Flip', window_ptr);   % show stim, return flip time
     WaitSecs(4.5);
-    vbl = Screen('Flip', window_ptr); 
+    vbl = Screen('Flip', window_ptr);
     WaitSecs(0.5);
     start_time = vbl + 0.5;
 
@@ -72,7 +72,7 @@ try
         trial_end = stim_offset + timing.iti;
         onset_timestamp = nan;
         offset_timestamp = nan;
-       
+
         % now present stimuli and check user's response
         while ~early_exit
             [key_pressed, timestamp, key_code] = KbCheck(-1);
@@ -97,7 +97,7 @@ try
                     offset_timestamp = vbl;
                 end
             elseif timestamp < stim_offset - 0.5 * ifi
-                
+
                 switch this_trial.task{:}
                     case 'number' % upper part
                         ycenter_stim = ycenter - ratio_size / 2 * RectHeight(window_rect);

@@ -1,5 +1,5 @@
 function [rec, status, exception] = start_stroop(run, window_ptr, window_rect, prac)
-   
+
 % ---- configure exception ----
 status = 0;
 exception = [];
@@ -19,8 +19,8 @@ rec.resp = cell(height(config), 1);
 rec.rt = nan(height(config), 1);
 
 timing = struct(...
-    'iti', 0.5, ... 
-    'tdur', 2.5); 
+    'iti', 0.5, ...
+    'tdur', 2.5);
 
 imageFolder = 'stimuli/stroop_stimuli';
 
@@ -28,7 +28,7 @@ imageFolder = 'stimuli/stroop_stimuli';
 keys = struct(...
     'start', KbName('s'), ...
     'exit', KbName('Escape'), ...
-     'red', KbName('1!'), ...
+    'red', KbName('1!'), ...
     'yellow', KbName('2@'), ...
     'blue', KbName('3#'), ...
     'green', KbName('4$'));
@@ -50,9 +50,9 @@ try
     Screen('DrawTexture', window_ptr, tex);
     Screen('Flip', window_ptr);   % show stim, return flip time
     WaitSecs(4.5);
-    vbl = Screen('Flip', window_ptr); 
+    vbl = Screen('Flip', window_ptr);
     WaitSecs(0.5);
-    start_time = vbl + 0.5; 
+    start_time = vbl + 0.5;
 
     % main experiment
     for trial_order = 1:height(config)
@@ -102,7 +102,7 @@ try
                 [imgHeight, imgWidth, ~] = size(Image);
                 Rect = CenterRectOnPoint([0 0 imgWidth imgHeight], xcenter, ycenter);
                 Screen('DrawTexture', window_ptr, Texture, [], Rect);
-                 vbl = Screen('Flip', window_ptr);
+                vbl = Screen('Flip', window_ptr);
                 if isnan(onset_timestamp)
                     onset_timestamp = vbl;
                 end
@@ -143,13 +143,13 @@ end
 % % enable character input and show mouse cursor
 % ListenChar;
 % ShowCursor;
-% 
+%
 % % ---- restore preferences ----
 % Screen('Preference', 'VisualDebugLevel', old_visdb);
 % Screen('Preference', 'SkipSyncTests', old_sync);
 % Screen('Preference', 'TextRenderer', old_text_render);
 % Priority(old_pri);
-% 
+%
 % if ~isempty(exception)
 %     rethrow(exception)
 % end

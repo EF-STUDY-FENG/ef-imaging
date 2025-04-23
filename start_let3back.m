@@ -48,7 +48,7 @@ try
     Screen('DrawTexture', window_ptr, tex);
     Screen('Flip', window_ptr);   % show stim, return flip time
     WaitSecs(4.5);
-    vbl = Screen('Flip', window_ptr); 
+    vbl = Screen('Flip', window_ptr);
     WaitSecs(0.5);
     start_time = vbl + 0.5;
 
@@ -70,8 +70,8 @@ try
         trial_end = stim_offset + timing.iti;
         onset_timestamp = nan;
         offset_timestamp = nan;
-        
-        
+
+
         % now present stimuli and check user's response
         while ~early_exit
             [key_pressed, timestamp, key_code] = KbCheck(-1);
@@ -98,8 +98,8 @@ try
             elseif timestamp < stim_offset - 0.5 * ifi
                 DrawFormattedText(window_ptr, stim_str, ...
                     'center', 'center', ...
-                WhiteIndex(window_ptr), [], [], [], [], [], ...
-                CenterRectOnPoint(stim_window, xcenter, ycenter));
+                    WhiteIndex(window_ptr), [], [], [], [], [], ...
+                    CenterRectOnPoint(stim_window, xcenter, ycenter));
                 vbl = Screen('Flip', window_ptr);
                 if isnan(onset_timestamp)
                     onset_timestamp = vbl;

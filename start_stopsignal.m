@@ -43,7 +43,7 @@ early_exit = false;
 try
     % get screen center
     [xcenter, ycenter] = RectCenter(window_rect);
-    
+
     % get inter flip interval
     ifi = Screen('GetFlipInterval', window_ptr);
 
@@ -97,7 +97,7 @@ try
             end
             last_ssd(ssd_idx) = ssd;
             out_ssd(ssd_idx) = ssd;
-            
+
         end
 
         % initialize responses
@@ -208,7 +208,7 @@ try
         rec.acc(trial_order) = acc;
     end
     % accu = sum(rec{:, 9} == 1) / height(config);
-    
+
 catch exception
     status = -1;
 end

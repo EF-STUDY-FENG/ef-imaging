@@ -38,10 +38,10 @@ keys = struct( ...
     'start', KbName('s'), ...
     'exit', KbName('Escape'));
 
-% ---- seq config ---- 
+% ---- seq config ----
 config = readtable(fullfile("config/main_program", 'seq.xlsx'));
 n = str2num(strjoin(config.run(run)));
-        
+
 %%
 early_exit = false;
 try
@@ -83,23 +83,23 @@ try
 
     % --- Main Program --- %
     funcSeq = {@numlet, @let3back, @stroop, @antisac, @colshp, ...
-                   @spt2back, @keeptrack, @sizelife, @stopsignal};
-    
+        @spt2back, @keeptrack, @sizelife, @stopsignal};
+
     for idx = 1:length(n)
         funcSeq{n(idx)}(run, subconfig, window_ptr, window_rect, outFolderPath);
     end
-    
+
     % ---- END Inst Display ---- %
-        endtime = GetSecs;
-        dur = endtime - start;
-        Screen('Flip', window_ptr);
-        DrawFormattedText(window_ptr, double('请闭眼等待'), 'center', 'center', WhiteIndex(window_ptr));
-        Screen('Flip', window_ptr);   % show stim, return flip time
-        WaitSecs(3);
+    endtime = GetSecs;
+    dur = endtime - start;
+    Screen('Flip', window_ptr);
+    DrawFormattedText(window_ptr, double('请闭眼等待'), 'center', 'center', WhiteIndex(window_ptr));
+    Screen('Flip', window_ptr);   % show stim, return flip time
+    WaitSecs(3);
 
 
 catch exception
-status = -1;
+    status = -1;
 end
 
 % --- post presentation jobs
@@ -119,73 +119,73 @@ if ~isempty(exception)
     rethrow(exception)
 end
 
-    %%% ---- Each Task Func ---- %%%
-        %% -- NumLet Task -- %%
-        function  numlet(run, subconfig, window_ptr, window_rect, outFolderPath)
-        rec = start_numlet(run, window_ptr, window_rect, 1);
-        save_task_data('numlet', rec, subconfig, outFolderPath);
-        end
-    
-        %% -- Let3Back Task -- %%
-        function  let3back(run, subconfig, window_ptr, window_rect, outFolderPath)
-        rec = start_let3back(run, window_ptr, window_rect, 1);
-        save_task_data('let3back', rec, subconfig, outFolderPath);
-        end
+%%% ---- Each Task Func ---- %%%
+%% -- NumLet Task -- %%
+function  numlet(run, subconfig, window_ptr, window_rect, outFolderPath)
+rec = start_numlet(run, window_ptr, window_rect, 1);
+save_task_data('numlet', rec, subconfig, outFolderPath);
+end
 
-        %% -- Stroop Task -- %%
-        function  stroop(run, subconfig, window_ptr, window_rect, outFolderPath)
-        rec = start_stroop(run, window_ptr, window_rect, 1);
-        save_task_data('stroop', rec, subconfig, outFolderPath);
-        end
+%% -- Let3Back Task -- %%
+function  let3back(run, subconfig, window_ptr, window_rect, outFolderPath)
+rec = start_let3back(run, window_ptr, window_rect, 1);
+save_task_data('let3back', rec, subconfig, outFolderPath);
+end
 
-        %% -- AntiSac Task -- %%S
-        function  antisac(run, subconfig, window_ptr, window_rect, outFolderPath)
-        rec = start_antisac(run, window_ptr, window_rect, 1);
-        save_task_data('antisac', rec, subconfig, outFolderPath);
-        end
+%% -- Stroop Task -- %%
+function  stroop(run, subconfig, window_ptr, window_rect, outFolderPath)
+rec = start_stroop(run, window_ptr, window_rect, 1);
+save_task_data('stroop', rec, subconfig, outFolderPath);
+end
 
-        %% -- ColShp Task -- %%
-        function  colshp(run, subconfig, window_ptr, window_rect, outFolderPath)
-        rec = start_colshp(run, window_ptr, window_rect, 1);
-        save_task_data('colshp', rec, subconfig, outFolderPath);
-        end
+%% -- AntiSac Task -- %%S
+function  antisac(run, subconfig, window_ptr, window_rect, outFolderPath)
+rec = start_antisac(run, window_ptr, window_rect, 1);
+save_task_data('antisac', rec, subconfig, outFolderPath);
+end
 
-        %% -- Spt2Back Task -- %%
-        function  spt2back(run, subconfig, window_ptr, window_rect, outFolderPath)
-        rec = start_spt2back(run, window_ptr, window_rect, 1);
-        save_task_data('spt2back', rec, subconfig, outFolderPath);
-        end
+%% -- ColShp Task -- %%
+function  colshp(run, subconfig, window_ptr, window_rect, outFolderPath)
+rec = start_colshp(run, window_ptr, window_rect, 1);
+save_task_data('colshp', rec, subconfig, outFolderPath);
+end
 
-        %% -- KeepTrack Task -- %%
-        function  keeptrack(run, subconfig, window_ptr, window_rect, outFolderPath)
-        rec = start_keeptrack(run, window_ptr, window_rect, 1);
-        save_task_data('keeptrack', rec, subconfig, outFolderPath);
-        end
+%% -- Spt2Back Task -- %%
+function  spt2back(run, subconfig, window_ptr, window_rect, outFolderPath)
+rec = start_spt2back(run, window_ptr, window_rect, 1);
+save_task_data('spt2back', rec, subconfig, outFolderPath);
+end
 
-        %% -- SizeLife Task -- %%
-        function  sizelife(run, subconfig, window_ptr, window_rect, outFolderPath)
-        rec = start_sizelife(run, window_ptr, window_rect, 1);
-        save_task_data('sizelife', rec, subconfig, outFolderPath);
-        end
+%% -- KeepTrack Task -- %%
+function  keeptrack(run, subconfig, window_ptr, window_rect, outFolderPath)
+rec = start_keeptrack(run, window_ptr, window_rect, 1);
+save_task_data('keeptrack', rec, subconfig, outFolderPath);
+end
 
-        %% -- Stop Signal Task -- %%
-        function  stopsignal(run, subconfig, window_ptr, window_rect, outFolderPath)
-        [rec, out_ssd] = start_stopsignal(run, window_ptr, window_rect, 1);
-        save_task_data('stopsignal', rec, subconfig, outFolderPath);
-        ssd_run = sprintf('sub%s_outssd.mat', subconfig{1});
-        out_ssd_place = fullfile(outFolderPath, ssd_run);
-        save(out_ssd_place, "out_ssd");
-        end
+%% -- SizeLife Task -- %%
+function  sizelife(run, subconfig, window_ptr, window_rect, outFolderPath)
+rec = start_sizelife(run, window_ptr, window_rect, 1);
+save_task_data('sizelife', rec, subconfig, outFolderPath);
+end
 
-        
+%% -- Stop Signal Task -- %%
+function  stopsignal(run, subconfig, window_ptr, window_rect, outFolderPath)
+[rec, out_ssd] = start_stopsignal(run, window_ptr, window_rect, 1);
+save_task_data('stopsignal', rec, subconfig, outFolderPath);
+ssd_run = sprintf('sub%s_outssd.mat', subconfig{1});
+out_ssd_place = fullfile(outFolderPath, ssd_run);
+save(out_ssd_place, "out_ssd");
+end
+
+
 
 function save_task_data(task_name, rec, subconfig, outFolderPath)
 
-    % run = subconfig{2};
-    filename = sprintf('sub-%s_task-%s_test_events.tsv',...
-        subconfig{1}, task_name);
+% run = subconfig{2};
+filename = sprintf('sub-%s_task-%s_test_events.tsv',...
+    subconfig{1}, task_name);
 
-    writetable(rec, fullfile(outFolderPath, filename),...
-        'FileType', 'text',...
-        'Delimiter', '\t');
+writetable(rec, fullfile(outFolderPath, filename),...
+    'FileType', 'text',...
+    'Delimiter', '\t');
 end
