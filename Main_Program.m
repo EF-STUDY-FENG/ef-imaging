@@ -96,7 +96,7 @@ try
     funcSeq = {'numlet', 'let3back', 'stroop', 'antisac', 'colshp', ...
            'spt2back', 'keeptrack', 'sizelife', 'stopsignal'};
     
-    for idx = 9%:length(n)
+    for idx = 1:length(n)
         start_time = instPlayed(funcSeq{n(idx)}, window_ptr);
         rti = start_time - start; % Run and Task Interval
         disp(rti)
@@ -135,10 +135,10 @@ end
 
 %% ---- Call Each Task Function ---- %%
 function generalFunc(taskName, run, start, rti, subconfig, window_ptr, window_rect, outFolderPath)
-    taskName = ['start_', taskName];
-    func = str2func(taskName);
+    funcName = ['start_', taskName];
+    func = str2func(funcName);
     try
-        if strcmp(taskName, 'start_stopsignal')
+        if strcmp(funcName, 'start_stopsignal')
             % Handle stopsignal task
             if run == 1
                 [rec, out_ssd] = func(run, start, rti, window_ptr, window_rect);
@@ -162,9 +162,9 @@ function generalFunc(taskName, run, start, rti, subconfig, window_ptr, window_re
             % Call other tasks normally
             rec = func(run, start, rti, window_ptr, window_rect);
         end
-        save_task_data(taskName, rec, subconfig, outFolderPath);
+        save_task_data(funcName, rec, subconfig, outFolderPath);
     catch ME
-        fprintf('%s function call failed: %s\n', taskName, ME.message);
+        fprintf('%s function call failed: %s\n', funcName, ME.message);
     end
 end
 
@@ -194,78 +194,3 @@ function start_time = instPlayed(taskName, window_ptr)
     end
     start_time = vbl + 0.5;
 end
-%%
-
-
-% %% -- Stop Signal Task -- %%
-%         function  stopsignal(funcName, run, subconfig, window_ptr, window_rect, outFolderPath)
-%         if run == 1
-%             [rec, out_ssd] = start_stopsignal(run, window_ptr, window_rect);
-%             save_task_data(funcName, rec, subconfig, outFolderPath);
-%             % save ssd to next run
-%             out_ssd_folder = sprintf('stimuli/%s_ssd/Sub%s', funcName, subconfig{1});  
-%             if ~exist(out_ssd_folder, 'dir')
-%                 mkdir(fullfile(pwd, out_ssd_folder));
-%             end
-%             ssd_run = sprintf('run%d.mat', run);
-%             out_ssd_place = fullfile(out_ssd_folder, ssd_run);
-%             save(out_ssd_place, "out_ssd");
-%         else
-%             init_ssd_place = sprintf('stimuli/%s_ssd/Sub%s/run%d.mat',funcName, subconfig{1}, run-1);
-%             load(init_ssd_place, "out_ssd");
-%             init_ssd = out_ssd;
-%             [rec, out_ssd] = start_stopsignal(run, window_ptr, window_rect, init_ssd);
-%             save_task_data('stopsignal', rec, subconfig, outFolderPath);
-%             out_ssd_place = sprintf('stimuli/%s_ssd/Sub%s/run%d.mat',funcName, subconfig{1}, run);
-%             save(out_ssd_place, "out_ssd");
-%         end
-%         end
-
-        % %% -- Let3Back Task -- %%
-        % function  let3back(funcName, run, subconfig, window_ptr, window_rect, outFolderPath)
-        % rec = start_let3back(run, window_ptr, window_rect);
-        % save_task_data(funcName, rec, subconfig, outFolderPath);
-        % end
-        % 
-        % %% -- Stroop Task -- %%
-        % function  stroop(funcName, run, subconfig, window_ptr, window_rect, outFolderPath)
-        % rec = start_stroop(run, window_ptr, window_rect);
-        % save_task_data(funcName, rec, subconfig, outFolderPath);
-        % end
-        % 
-        % %% -- AntiSac Task -- %%S
-        % function  antisac(funcName, run, subconfig, window_ptr, window_rect, outFolderPath)
-        % rec = start_antisac(run, window_ptr, window_rect);
-        % save_task_data(funcName, rec, subconfig, outFolderPath);
-        % end
-        % 
-        % %% -- ColShp Task -- %%
-        % function  colshp(funcName, run, subconfig, window_ptr, window_rect, outFolderPath)
-        % rec = start_colshp(run, window_ptr, window_rect);
-        % save_task_data(funcName, rec, subconfig, outFolderPath);
-        % end
-        % 
-        % %% -- Spt2Back Task -- %%
-        % function  spt2back(funcName, run, subconfig, window_ptr, window_rect, outFolderPath)
-        % rec = start_spt2back(run, window_ptr, window_rect);
-        % save_task_data(funcName, rec, subconfig, outFolderPath);
-        % end
-        % 
-        % %% -- KeepTrack Task -- %%
-        % function  keeptrack(funcName, run, subconfig, window_ptr, window_rect, outFolderPath)
-        % rec = start_keeptrack(run, window_ptr, window_rect);
-        % save_task_data(funcName, rec, subconfig, outFolderPath);
-        % end
-        % 
-        % %% -- SizeLife Task -- %%
-        % function  sizelife(funcName, run, subconfig, window_ptr, window_rect, outFolderPath)
-        % rec = start_sizelife(run, window_ptr, window_rect);
-        % save_task_data(funcName, rec, subconfig, outFolderPath);
-        % end
-
-        
-
-        
-
-
-

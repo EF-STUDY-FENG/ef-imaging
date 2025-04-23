@@ -60,16 +60,6 @@ try
           r(1)+p.sz*0.1  r(4)-p.sz*0.1;
           r(3)-p.sz*0.1  r(4)-p.sz*0.1];
 
-    % % display welcome/instr screen and wait for a press of 's' to start
-    % Inst = imread('Instruction\colshp.jpg');
-    % tex = Screen('MakeTexture',window_ptr, Inst);
-    % Screen('DrawTexture', window_ptr, tex);
-    % Screen('Flip',window_ptr);
-    % WaitSecs(4.5);
-    % vbl = Screen('Flip', window_ptr); 
-    % WaitSecs(0.5);
-    % start_time = vbl + 0.5; 
-
     % main experiment
     for trial_order = 1:p.trial
         if early_exit
@@ -152,7 +142,6 @@ try
         rec.rt(trial_order) = rt;
         rec.cort(trial_order) = score;
     end
-    % accu = sum(rec{:, 11} == 1) / p.trial;
 
 catch exception
     status = -1;

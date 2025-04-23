@@ -45,16 +45,6 @@ try
     % get inter flip interval
     ifi = Screen('GetFlipInterval', window_ptr);
 
-    % % display welcome/instr screen and wait for a press of 's' to start
-    % Inst = imread('Instruction\Stroop.jpg');
-    % tex = Screen('MakeTexture',window_ptr, Inst);
-    % Screen('DrawTexture', window_ptr, tex);
-    % Screen('Flip', window_ptr);   % show stim, return flip time
-    % WaitSecs(4.5);
-    % vbl = Screen('Flip', window_ptr); 
-    % WaitSecs(0.5);
-    % start_time = vbl + 0.5; 
-
     % main experiment
     for trial_order = 1:height(config)
         if early_exit
@@ -138,20 +128,4 @@ catch exception
     status = -1;
 end
 
-% % --- post presentation jobs
-% Screen('Close');
-% sca;
-% % enable character input and show mouse cursor
-% ListenChar;
-% ShowCursor;
-% 
-% % ---- restore preferences ----
-% Screen('Preference', 'VisualDebugLevel', old_visdb);
-% Screen('Preference', 'SkipSyncTests', old_sync);
-% Screen('Preference', 'TextRenderer', old_text_render);
-% Priority(old_pri);
-% 
-% if ~isempty(exception)
-%     rethrow(exception)
-% end
 end

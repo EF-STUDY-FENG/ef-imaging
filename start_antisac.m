@@ -54,16 +54,6 @@ try
     rightMatrixRect = [xRightCenter - matrixSize/2, ycenter - matrixSize/2, ...
                    xRightCenter + matrixSize/2, ycenter + matrixSize/2];
 
-    % % display welcome/instr screen and wait for a press of 's' to start
-    % Inst = imread('Instruction\antisac.jpg');  %%% instruction
-    % tex=Screen('MakeTexture', window_ptr, Inst);
-    % Screen('DrawTexture', window_ptr, tex);
-    % Screen('Flip', window_ptr);   
-    % WaitSecs(4.5);
-    % vbl = Screen('Flip', window_ptr); % show inst, return flip time
-    % WaitSecs(0.5);
-    % start_time = vbl + 0.5;
-
     % main experiment
     for trial_order = 1:height(config)
         if early_exit
@@ -167,11 +157,9 @@ try
 
 
     end
-    % accu = sum(rec{:, 10} == 1) / height(config);
 
 catch exception
     status = -1;
-    fprintf('function call failed: %s\n', exception.message);
 end
 
 end

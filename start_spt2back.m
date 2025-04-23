@@ -80,14 +80,6 @@ try
     rec.rt = nan(p.nTrial, 1);
     rec.cort = nan(p.nTrial, 1);
 
-
-    % % display welcome/instr screen and wait for a press of 's' to start
-    % Inst = imread('Instruction\Spt2Back.jpg');
-    % tex = Screen('MakeTexture',window_ptr, Inst);
-    % Screen('DrawTexture', window_ptr, tex);
-    % Screen('Flip', window_ptr);   % show stim, return flip time
-    % WaitSecs(4.5);
-
     % main experiment
 
     ind = randsample(25, p.nSquare);
@@ -170,11 +162,9 @@ try
         rec.rt(trial_order) = rt;
         rec.cort(trial_order) = score;
     end
-    % accu = sum(rec{:, 7} == 1) / (p.nTrial - p.nback);
     
 catch exception
     status = -1;
-    fprintf('function call failed: %s\n', exception.message);
 end
 
 end

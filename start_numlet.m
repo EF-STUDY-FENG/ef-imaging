@@ -3,7 +3,6 @@ function [rec, status, exception] = start_numlet(run, start, rti, window_ptr, wi
 % ---- configure exception ----
 status = 0;
 exception = [];
-% accu = 0.00;
 
 % ---- configure sequence ---- %
 if nargin > 5 && prac == 1
@@ -44,16 +43,6 @@ try
     ratio_size = 0.3;
     stim_window = [0, 0, RectWidth(window_rect), ratio_size * RectHeight(window_rect)];
     SquareFig = [0 0 250 100];
-
-   % % display welcome/instr screen and wait for a press of 's' to start
-   %  Inst = imread('Instruction\numlet.jpg');
-   %  tex = Screen('MakeTexture',window_ptr, Inst);
-   %  Screen('DrawTexture', window_ptr, tex);
-   %  Screen('Flip', window_ptr);   % show stim, return flip time
-   %  WaitSecs(4.5);
-   %  vbl = Screen('Flip', window_ptr); 
-   %  WaitSecs(0.5);
-   %  start_time = vbl + 0.5;
 
     % main experiment
     for trial_order = 1:height(config)
@@ -141,7 +130,6 @@ try
         rec.rt(trial_order) = rt;
         rec.cort(trial_order) = score;
     end
-    % accu = sum(rec{:, 10} == 1) / (height(config));
 
 catch exception
     status = -1;

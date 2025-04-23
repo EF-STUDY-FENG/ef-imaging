@@ -3,7 +3,6 @@ function [rec, out_ssd, status, exception] = start_stopsignal(run, start, rti, w
 % ---- configure exception ----
 status = 0;
 exception = [];
-% accu = 0.00;
 
 % ---- configure sequence ----
 if nargin > 6 && prac == 1
@@ -21,7 +20,7 @@ rec.resp = cell(height(config), 1);
 rec.rt = nan(height(config), 1);
 rec.acc = nan(height(config), 1);
 out_ssd = [];
-if ~(nargin == 4)
+if ~(nargin == 6)
     init_ssd = [0.2, 0.6];
 end
 last_ssd = [nan, nan];
@@ -60,16 +59,6 @@ try
         arrow_length/2, 0;              % tip
         -arrow_length/2, arrow_width/2    % base bottom
         ]';
-
-    % % display welcome/instr screen and wait for a press of 's' to start
-    % Inst = imread('Instruction\stopsignal.jpg');  %%% instruction
-    % tex = Screen('MakeTexture', window_ptr, Inst);
-    % Screen('DrawTexture', window_ptr, tex);
-    % Screen('Flip', window_ptr);   % show stim, return flip time
-    % WaitSecs(4.5);
-    % vbl = Screen('Flip', window_ptr);
-    % WaitSecs(0.5);
-    % start_time = vbl + 0.5;
 
     % main experiment
 
@@ -207,7 +196,6 @@ try
         rec.rt(trial_order) = rt;
         rec.acc(trial_order) = acc;
     end
-    % accu = sum(rec{:, 9} == 1) / height(config);
     
 catch exception
     status = -1;

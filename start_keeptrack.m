@@ -1,13 +1,9 @@
-function [rec, dur, status, exception] = start_keeptrack(run, start, rti, window_ptr, window_rect, prac)
-% arguments
-%     opts.SkipSyncTests (1, 1) {mustBeNumericOrLogical} = false
-% end
+function [rec, status, exception] = start_keeptrack(run, start, rti, window_ptr, window_rect, prac)
 
 % ---- configure exception ----
 status = 0;
 exception = [];
-% accu = 0.00;
-dur = 0;
+
 % ---- configure sequence ----
 p.maxTri = 4;
 p.level = 3;
@@ -45,16 +41,6 @@ try
     % get screen center
     [~, ycenter] = RectCenter(window_rect);
     screenWidth = window_rect(3);
-
-    % % display welcome/instr screen and wait for a press of 's' to start
-    % Inst = imread('Instruction\keeptrack.jpg');
-    % tex = Screen('MakeTexture',window_ptr, Inst);
-    % Screen('DrawTexture', window_ptr, tex);
-    % Screen('Flip',window_ptr); 
-    % WaitSecs(4.5);
-    % vbl = Screen('Flip',window_ptr); 
-    % WaitSecs(0.5);
-    % start_time = vbl + 0.5;
 
     % main experiment
     for trial = 1:p.maxTri
@@ -188,11 +174,7 @@ try
             break
         end
     end
-    % accu = sum(rec{:, 3} == 1) / p.maxTri;
-    Endtime = GetSecs;
-    dur = Endtime - start;
         
-
 catch exception
     status = -1;
 end
