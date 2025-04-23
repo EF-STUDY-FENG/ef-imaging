@@ -1,54 +1,49 @@
-function [rec, status, exception] = start_numlet(run, window_ptr, window_rect, prac)
+function [rec, status, exception] = start_sizelife(run, window_ptr, window_rect, prac)
 
 % ---- configure exception ----
 status = 0;
 exception = [];
 % accu = 0.00;
 
-% ---- configure sequence ---- %
+% ---- configure sequence ----
 if nargin > 3 && prac == 1
-    config = readtable(fullfile("config_prac", "numlet_prac.xlsx"));
+    config = readtable(fullfile("config_prac", "sizelife_prac.xlsx"));
 else
-    TaskFile = sprintf('numlet_run%d.xlsx', run);
-    config = readtable(fullfile("config/numlet", TaskFile));
+    TaskFile = sprintf('sizelife_run%d.xlsx', run);
+    config = readtable(fullfile("config/sizelife", TaskFile));
 end
 rec = config;
 rec.onset_real = nan(height(config), 1);
 rec.resp_raw = cell(height(config), 1);
 rec.resp = cell(height(config), 1);
 rec.rt = nan(height(config), 1);
-rec.cort = nan(height(config),1);
 timing = struct( ...
     'iti', 0.5, ... % inter-trial-interval
     'tdur', 2.5); % trial duration
+
+imageFolder = 'stimuli/sizelife_stimuli'; % figure folder
 
 % ---- keyboard settings ----
 keys = struct( ...
     'start', KbName('s'), ...
     'exit', KbName('Escape'), ...
-    'left', KbName('1!'), ...
-    'right', KbName('4$'));
-
+    'Y', KbName('1!'), ...
+    'N', KbName('4$') );
 
 % ---- stimuli presentation ----
 % the flag to determine if the experiment should exit early
 early_exit = false;
 try
     % get screen center
-    [xcenter, ycenter] = RectCenter(window_rect);
+    [~, ~] = RectCenter(window_rect);
     % get inter flip interval
     ifi = Screen('GetFlipInterval', window_ptr);
-    %
-    % % ---- configure stimuli ----
-    ratio_size = 0.3;
-    stim_window = [0, 0, RectWidth(window_rect), ratio_size * RectHeight(window_rect)];
-    SquareFig = [0 0 250 100];
 
     % display welcome/instr screen and wait for a press of 's' to start
-    Inst = imread('Instruction\numlet.jpg');
-    tex = Screen('MakeTexture',window_ptr, Inst);
-    Screen('DrawTexture', window_ptr, tex);
-    Screen('Flip', window_ptr);   % show stim, return flip time
+    sq=imread('Instruction\sizelife.jpg');
+    tex=Screen('MakeTexture',window_ptr,sq);
+    Screen('DrawTexture',window_ptr,tex);
+    Screen('Flip',window_ptr);
     WaitSecs(4.5);
     vbl = Screen('Flip', window_ptr);
     WaitSecs(0.5);
@@ -60,7 +55,6 @@ try
             break
         end
         this_trial = config(trial_order, :);
-        stim_str = [num2str(this_trial.number), '    ', this_trial.letter{:}];
 
         % initialize responses
         resp_made = false;
@@ -96,21 +90,50 @@ try
                 if timestamp >= stim_offset && isnan(offset_timestamp)
                     offset_timestamp = vbl;
                 end
-            elseif timestamp < stim_offset - 0.5 * ifi
 
-                switch this_trial.task{:}
-                    case 'number' % upper part
-                        ycenter_stim = ycenter - ratio_size / 2 * RectHeight(window_rect);
-                    case 'letter' % lower part
-                        ycenter_stim = ycenter + ratio_size / 2 * RectHeight(window_rect);
+            elseif timestamp < stim_offset - 0.5 * ifi
+                centerImg_name = this_trial.pic;
+                topImg_name = this_trial.task;
+                centerImg = fullfile(imageFolder, centerImg_name);
+                topImg = fullfile(imageFolder, topImg_name);
+
+                % Ensure centerImg is a character vector or string scalar
+                if iscell(centerImg)
+                    centerImg = centerImg{1};
                 end
-                DrawFormattedText(window_ptr, stim_str, ...
-                    'center', 'center', ...
-                    WhiteIndex(window_ptr), [], [], [], [], [], ...
-                    CenterRectOnPoint(stim_window, xcenter, ycenter_stim));
-                SquareRect = CenterRectOnPointd(SquareFig, xcenter, ycenter_stim);
-                Screen('FrameRect', window_ptr, WhiteIndex(window_ptr), SquareRect, 5);
+
+                if iscell(topImg)
+                    topImg = topImg{1};  % Extract cell content
+                end
+                centerImage = imread(centerImg);
+                topImage = imread(topImg);
+
+                % Reduce the picture to normal
+                centerImage = imresize(centerImage, 0.44, "nearest");
+
+                % Create texture
+                centerTexture = Screen('MakeTexture', window_ptr, centerImage);
+                topTexture = Screen('MakeTexture', window_ptr, topImage);
+                [screenWidth, screenHeight] = Screen('WindowSize', window_ptr);
+
+                % Calculate dimensions for the center image while maintaining aspect ratio
+                centerWidth = size(centerImage, 2);
+                centerHeight = size(centerImage, 1);
+                centerRect = [0, 0, centerWidth, centerHeight];
+                centerRect = CenterRectOnPoint(centerRect, screenWidth / 2, screenHeight / 2);
+
+                % Calculate dimensions for the top image while maintaining aspect ratio
+                topWidth = size(topImage, 2);
+                topHeight = size(topImage, 1);
+                topRect = [0, 0, topWidth, topHeight];
+                topY = centerRect(2) - topHeight - 15;
+                topRect = CenterRectOnPoint(topRect, screenWidth/2, topY);
+
+                % Draw the textures on the screen
+                Screen('DrawTexture', window_ptr, centerTexture, [], centerRect);
+                Screen('DrawTexture', window_ptr, topTexture, [], topRect);
                 vbl = Screen('Flip', window_ptr);
+
                 if isnan(onset_timestamp)
                     onset_timestamp = vbl;
                 end
@@ -124,7 +147,7 @@ try
             rt = 0;
         else
             resp_raw = string(strjoin(cellstr(KbName(resp_code)), '|'));
-            valid_names = {'left', 'right'};
+            valid_names = {'Y', 'N'};
             valid_codes = cellfun(@(x) keys.(x), valid_names);
             if sum(resp_code) > 1 || (~any(resp_code(valid_codes)))
                 resp = 'invalid';

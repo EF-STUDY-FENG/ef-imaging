@@ -1,51 +1,51 @@
-function [rec, status, exception] = start_numlet(run, window_ptr, window_rect, prac)
+function [rec, status, exception] = start_stroop(run, window_ptr, window_rect, prac)
 
 % ---- configure exception ----
 status = 0;
 exception = [];
 % accu = 0.00;
 
-% ---- configure sequence ---- %
+% ---- configure sequence ----
 if nargin > 3 && prac == 1
-    config = readtable(fullfile("config_prac", "numlet_prac.xlsx"));
+    config = readtable(fullfile("config_prac", "stroop_prac.xlsx"));
 else
-    TaskFile = sprintf('numlet_run%d.xlsx', run);
-    config = readtable(fullfile("config/numlet", TaskFile));
+    TaskFile = sprintf('stroop_run%d.xlsx', run);
+    config = readtable(fullfile("config/stroop", TaskFile));
 end
 rec = config;
 rec.onset_real = nan(height(config), 1);
 rec.resp_raw = cell(height(config), 1);
 rec.resp = cell(height(config), 1);
 rec.rt = nan(height(config), 1);
-rec.cort = nan(height(config),1);
-timing = struct( ...
-    'iti', 0.5, ... % inter-trial-interval
-    'tdur', 2.5); % trial duration
+
+timing = struct(...
+    'iti', 0.5, ...
+    'tdur', 2.5);
+
+imageFolder = 'stimuli/stroop_stimuli';
 
 % ---- keyboard settings ----
-keys = struct( ...
+keys = struct(...
     'start', KbName('s'), ...
     'exit', KbName('Escape'), ...
-    'left', KbName('1!'), ...
-    'right', KbName('4$'));
-
+    'red', KbName('1!'), ...
+    'yellow', KbName('2@'), ...
+    'blue', KbName('3#'), ...
+    'green', KbName('4$'));
 
 % ---- stimuli presentation ----
 % the flag to determine if the experiment should exit early
 early_exit = false;
+
 try
     % get screen center
     [xcenter, ycenter] = RectCenter(window_rect);
+
     % get inter flip interval
     ifi = Screen('GetFlipInterval', window_ptr);
-    %
-    % % ---- configure stimuli ----
-    ratio_size = 0.3;
-    stim_window = [0, 0, RectWidth(window_rect), ratio_size * RectHeight(window_rect)];
-    SquareFig = [0 0 250 100];
 
     % display welcome/instr screen and wait for a press of 's' to start
-    Inst = imread('Instruction\numlet.jpg');
+    Inst = imread('Instruction\Stroop.jpg');
     tex = Screen('MakeTexture',window_ptr, Inst);
     Screen('DrawTexture', window_ptr, tex);
     Screen('Flip', window_ptr);   % show stim, return flip time
@@ -60,7 +60,6 @@ try
             break
         end
         this_trial = config(trial_order, :);
-        stim_str = [num2str(this_trial.number), '    ', this_trial.letter{:}];
 
         % initialize responses
         resp_made = false;
@@ -97,19 +96,12 @@ try
                     offset_timestamp = vbl;
                 end
             elseif timestamp < stim_offset - 0.5 * ifi
-
-                switch this_trial.task{:}
-                    case 'number' % upper part
-                        ycenter_stim = ycenter - ratio_size / 2 * RectHeight(window_rect);
-                    case 'letter' % lower part
-                        ycenter_stim = ycenter + ratio_size / 2 * RectHeight(window_rect);
-                end
-                DrawFormattedText(window_ptr, stim_str, ...
-                    'center', 'center', ...
-                    WhiteIndex(window_ptr), [], [], [], [], [], ...
-                    CenterRectOnPoint(stim_window, xcenter, ycenter_stim));
-                SquareRect = CenterRectOnPointd(SquareFig, xcenter, ycenter_stim);
-                Screen('FrameRect', window_ptr, WhiteIndex(window_ptr), SquareRect, 5);
+                Img = fullfile(imageFolder, this_trial.sti{1});
+                Image = imread(Img);
+                Texture = Screen('MakeTexture', window_ptr, Image);
+                [imgHeight, imgWidth, ~] = size(Image);
+                Rect = CenterRectOnPoint([0 0 imgWidth imgHeight], xcenter, ycenter);
+                Screen('DrawTexture', window_ptr, Texture, [], Rect);
                 vbl = Screen('Flip', window_ptr);
                 if isnan(onset_timestamp)
                     onset_timestamp = vbl;
@@ -124,7 +116,7 @@ try
             rt = 0;
         else
             resp_raw = string(strjoin(cellstr(KbName(resp_code)), '|'));
-            valid_names = {'left', 'right'};
+            valid_names = {'red', 'yellow', 'blue', 'green'};
             valid_codes = cellfun(@(x) keys.(x), valid_names);
             if sum(resp_code) > 1 || (~any(resp_code(valid_codes)))
                 resp = 'invalid';
@@ -133,17 +125,32 @@ try
             end
             rt = resp_timestamp - onset_timestamp;
         end
-        score = strcmp(rec.cresp(trial_order), resp);
+        score = strcmp(rec.color(trial_order), resp);
         rec.onset_real(trial_order) = onset_timestamp - start_time;
         rec.resp_raw{trial_order} = resp_raw;
         rec.resp{trial_order} = resp;
         rec.rt(trial_order) = rt;
         rec.cort(trial_order) = score;
     end
-    % accu = sum(rec{:, 10} == 1) / (height(config));
-
+    % accu = sum(rec{:, 12} == 1) / (height(config));
 catch exception
     status = -1;
 end
 
+% % --- post presentation jobs
+% Screen('Close');
+% sca;
+% % enable character input and show mouse cursor
+% ListenChar;
+% ShowCursor;
+%
+% % ---- restore preferences ----
+% Screen('Preference', 'VisualDebugLevel', old_visdb);
+% Screen('Preference', 'SkipSyncTests', old_sync);
+% Screen('Preference', 'TextRenderer', old_text_render);
+% Priority(old_pri);
+%
+% if ~isempty(exception)
+%     rethrow(exception)
+% end
 end

@@ -1,79 +1,120 @@
-function [rec, status, exception] = start_numlet(run, window_ptr, window_rect, prac)
+function [rec,dur , status, exception] = start_spt2back(run, window_ptr, window_rect, prac)
 
 % ---- configure exception ----
 status = 0;
 exception = [];
 % accu = 0.00;
 
-% ---- configure sequence ---- %
+% ---- configure sequence ----
+p.back = 127;
+p.nback = 2;
+p.nSquare = 10;
+p.squareSize = 64;
 if nargin > 3 && prac == 1
-    config = readtable(fullfile("config_prac", "numlet_prac.xlsx"));
+    p.nTrial = 15;
 else
-    TaskFile = sprintf('numlet_run%d.xlsx', run);
-    config = readtable(fullfile("config/numlet", TaskFile));
+    p.nTrial = 30;
 end
-rec = config;
-rec.onset_real = nan(height(config), 1);
-rec.resp_raw = cell(height(config), 1);
-rec.resp = cell(height(config), 1);
-rec.rt = nan(height(config), 1);
-rec.cort = nan(height(config),1);
+
+rec = table();
+rec.trial = (1:p.nTrial)';
+rec.onset = (0:2:2*(p.nTrial-1))';
+
 timing = struct( ...
-    'iti', 0.5, ... % inter-trial-interval
-    'tdur', 2.5); % trial duration
+    'iti', 1.5, ... % inter-trial-interval
+    'tdur', 0.5); % trial duration
 
 % ---- keyboard settings ----
 keys = struct( ...
     'start', KbName('s'), ...
     'exit', KbName('Escape'), ...
-    'left', KbName('1!'), ...
-    'right', KbName('4$'));
-
+    'Y', KbName('1!'), ...
+    'N', KbName('4$'));
 
 % ---- stimuli presentation ----
 % the flag to determine if the experiment should exit early
 early_exit = false;
 try
-    % get screen center
-    [xcenter, ycenter] = RectCenter(window_rect);
+    % get each square location
+    [x, y] = meshgrid((0:4) * p.squareSize * 2);
+    x = x + window_rect(3)/2 + rand(5)*p.squareSize - p.squareSize*5;
+    y = y + window_rect(4)/2 + rand(5)*p.squareSize - p.squareSize*5;
+
     % get inter flip interval
     ifi = Screen('GetFlipInterval', window_ptr);
-    %
-    % % ---- configure stimuli ----
-    ratio_size = 0.3;
-    stim_window = [0, 0, RectWidth(window_rect), ratio_size * RectHeight(window_rect)];
-    SquareFig = [0 0 250 100];
+
+    % ---- configure stimuli ----
+    loc = randi(p.nSquare, p.nTrial);
+    yn = false(p.nTrial-2, 1);
+    if nargin > 3 && prac == 1
+        yn(1:4) = true;
+    else
+        yn(1:8) = true;
+    end
+    yn = Shuffle(yn);
+    yn = [false(2,1); yn]; % ok
+    while loc(2)==loc(1) % make the 2nd different from the 1st
+        loc(2) = randsample(p.nSquare, 1);
+    end
+    for i = p.nback+1 : p.nTrial
+        if yn(i)
+            loc(i) = loc(i-p.nback);
+        else
+            while any(loc(i) == loc(i-[1 p.nback]))
+                loc(i) = randsample(p.nSquare, 1);
+            end
+        end
+    end
+    for i = 1:p.nTrial
+        if i<3
+            rec.cresp(i) = "NaN";
+        elseif yn(i) == 0
+            rec.cresp(i) = "N";
+        elseif yn(i) == 1
+            rec.cresp(i) = "Y";
+        end
+    end
+    rec.onset_real = nan(p.nTrial, 1);
+    rec.resp = cell(p.nTrial, 1);
+    rec.rt = nan(p.nTrial, 1);
+    rec.cort = nan(p.nTrial, 1);
+
 
     % display welcome/instr screen and wait for a press of 's' to start
-    Inst = imread('Instruction\numlet.jpg');
+    Inst = imread('Instruction\Spt2Back.jpg');
     tex = Screen('MakeTexture',window_ptr, Inst);
     Screen('DrawTexture', window_ptr, tex);
     Screen('Flip', window_ptr);   % show stim, return flip time
     WaitSecs(4.5);
-    vbl = Screen('Flip', window_ptr);
-    WaitSecs(0.5);
-    start_time = vbl + 0.5;
 
     % main experiment
-    for trial_order = 1:height(config)
+
+    ind = randsample(25, p.nSquare);
+    rects = [x(ind) y(ind) x(ind)+p.squareSize y(ind)+p.squareSize]';
+    Screen('FrameRect', window_ptr, 255, rects, 3);
+    start = Screen('Flip', window_ptr);
+    WaitSecs(timing.tdur);
+    start = start + timing.tdur;
+
+    for trial_order = 1:p.nTrial
         if early_exit
             break
         end
-        this_trial = config(trial_order, :);
-        stim_str = [num2str(this_trial.number), '    ', this_trial.letter{:}];
+
+        this_trial = rec(trial_order, :);
+
 
         % initialize responses
         resp_made = false;
         resp_code = nan;
 
         % initialize stimulus timestamps
-        stim_onset = start_time + this_trial.onset;
+        stim_onset = start + this_trial.onset;
         stim_offset = stim_onset + timing.tdur;
         trial_end = stim_offset + timing.iti;
         onset_timestamp = nan;
         offset_timestamp = nan;
 
-        % now present stimuli and check user's response
         while ~early_exit
             [key_pressed, timestamp, key_code] = KbCheck(-1);
             if key_code(keys.exit)
@@ -92,24 +133,14 @@ try
                 break
             end
             if timestamp < stim_onset || timestamp >= stim_offset
+                Screen('FrameRect', window_ptr, 255, rects, 3);
                 vbl = Screen('Flip', window_ptr);
                 if timestamp >= stim_offset && isnan(offset_timestamp)
                     offset_timestamp = vbl;
                 end
             elseif timestamp < stim_offset - 0.5 * ifi
-
-                switch this_trial.task{:}
-                    case 'number' % upper part
-                        ycenter_stim = ycenter - ratio_size / 2 * RectHeight(window_rect);
-                    case 'letter' % lower part
-                        ycenter_stim = ycenter + ratio_size / 2 * RectHeight(window_rect);
-                end
-                DrawFormattedText(window_ptr, stim_str, ...
-                    'center', 'center', ...
-                    WhiteIndex(window_ptr), [], [], [], [], [], ...
-                    CenterRectOnPoint(stim_window, xcenter, ycenter_stim));
-                SquareRect = CenterRectOnPointd(SquareFig, xcenter, ycenter_stim);
-                Screen('FrameRect', window_ptr, WhiteIndex(window_ptr), SquareRect, 5);
+                Screen('FrameRect', window_ptr, 255, rects, 3);
+                Screen('FillRect', window_ptr, 128, rects(:,loc(trial_order))');
                 vbl = Screen('Flip', window_ptr);
                 if isnan(onset_timestamp)
                     onset_timestamp = vbl;
@@ -119,12 +150,11 @@ try
 
         % analyze user's response
         if ~resp_made
-            resp_raw = '';
+            % resp_raw = '';
             resp = '';
             rt = 0;
         else
-            resp_raw = string(strjoin(cellstr(KbName(resp_code)), '|'));
-            valid_names = {'left', 'right'};
+            valid_names = {'Y', 'N'};
             valid_codes = cellfun(@(x) keys.(x), valid_names);
             if sum(resp_code) > 1 || (~any(resp_code(valid_codes)))
                 resp = 'invalid';
@@ -134,13 +164,15 @@ try
             rt = resp_timestamp - onset_timestamp;
         end
         score = strcmp(rec.cresp(trial_order), resp);
-        rec.onset_real(trial_order) = onset_timestamp - start_time;
-        rec.resp_raw{trial_order} = resp_raw;
+        rec.onset_real(trial_order) = onset_timestamp - start;
         rec.resp{trial_order} = resp;
         rec.rt(trial_order) = rt;
         rec.cort(trial_order) = score;
     end
-    % accu = sum(rec{:, 10} == 1) / (height(config));
+    % accu = sum(rec{:, 7} == 1) / (p.nTrial - p.nback);
+    endtime = GetSecs;
+    dur = endtime - start;
+    disp(dur);
 
 catch exception
     status = -1;
