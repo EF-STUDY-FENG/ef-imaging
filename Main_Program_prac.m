@@ -38,7 +38,7 @@ keys = struct( ...
     'start', KbName('s'), ...
     'exit', KbName('Escape'));
 
-% ---- seq config ---- s2113444444
+% ---- seq config ---- %
 config = readtable(fullfile("config/main_program", 'seq.xlsx'));
 n = str2num(strjoin(config.run(run)));
         
