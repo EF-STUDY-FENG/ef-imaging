@@ -1,4 +1,4 @@
-function [rec,dur , status, exception] = start_spt2back(run, window_ptr, window_rect, prac)
+function [rec, status, exception] = start_spt2back(~, start, rti, window_ptr, window_rect, prac)
 
 % ---- configure exception ----
 status = 0;
@@ -10,7 +10,7 @@ p.back = 127;
 p.nback = 2;
 p.nSquare = 10;
 p.squareSize = 64;
-if nargin > 3 && prac == 1
+if nargin > 5 && prac == 1
     p.nTrial = 15;
 else
     p.nTrial = 30;
@@ -18,7 +18,8 @@ end
 
 rec = table();
 rec.trial = (1:p.nTrial)';
-rec.onset = (0:2:2*(p.nTrial-1))';
+rec.onset = (rti:2:rti+2*(p.nTrial-1))';
+config = rec;
 
 timing = struct( ...
     'iti', 1.5, ... % inter-trial-interval
@@ -39,14 +40,14 @@ try
     [x, y] = meshgrid((0:4) * p.squareSize * 2);
     x = x + window_rect(3)/2 + rand(5)*p.squareSize - p.squareSize*5;
     y = y + window_rect(4)/2 + rand(5)*p.squareSize - p.squareSize*5;
-
+    
     % get inter flip interval
     ifi = Screen('GetFlipInterval', window_ptr);
 
     % ---- configure stimuli ----
     loc = randi(p.nSquare, p.nTrial);
     yn = false(p.nTrial-2, 1);
-    if nargin > 3 && prac == 1
+    if nargin > 5 && prac == 1
         yn(1:4) = true;
     else
         yn(1:8) = true;
@@ -61,7 +62,7 @@ try
             loc(i) = loc(i-p.nback);
         else
             while any(loc(i) == loc(i-[1 p.nback]))
-                loc(i) = randsample(p.nSquare, 1);
+            loc(i) = randsample(p.nSquare, 1);
             end
         end
     end
@@ -79,30 +80,22 @@ try
     rec.rt = nan(p.nTrial, 1);
     rec.cort = nan(p.nTrial, 1);
 
-
-    % display welcome/instr screen and wait for a press of 's' to start
-    Inst = imread('Instruction\Spt2Back.jpg');
-    tex = Screen('MakeTexture',window_ptr, Inst);
-    Screen('DrawTexture', window_ptr, tex);
-    Screen('Flip', window_ptr);   % show stim, return flip time
-    WaitSecs(4.5);
-
     % main experiment
 
     ind = randsample(25, p.nSquare);
     rects = [x(ind) y(ind) x(ind)+p.squareSize y(ind)+p.squareSize]';
     Screen('FrameRect', window_ptr, 255, rects, 3);
-    start = Screen('Flip', window_ptr);
-    WaitSecs(timing.tdur);
-    start = start + timing.tdur;
+    Screen('Flip', window_ptr);
+    WaitSecs(timing.tdur-0.3);
+    % start_time = start_time + timing.tdur;
 
     for trial_order = 1:p.nTrial
         if early_exit
             break
         end
 
-        this_trial = rec(trial_order, :);
-
+        this_trial = config(trial_order, :);
+        
 
         % initialize responses
         resp_made = false;
@@ -129,8 +122,8 @@ try
                 resp_made = true;
             end
             if timestamp > trial_end - 0.5 * ifi
-                % remaining time is not enough for a new flip
-                break
+                    % remaining time is not enough for a new flip
+                    break
             end
             if timestamp < stim_onset || timestamp >= stim_offset
                 Screen('FrameRect', window_ptr, 255, rects, 3);
@@ -169,11 +162,7 @@ try
         rec.rt(trial_order) = rt;
         rec.cort(trial_order) = score;
     end
-    % accu = sum(rec{:, 7} == 1) / (p.nTrial - p.nback);
-    endtime = GetSecs;
-    dur = endtime - start;
-    disp(dur);
-
+    
 catch exception
     status = -1;
 end

@@ -1,17 +1,18 @@
-function [rec, status, exception] = start_stroop(run, window_ptr, window_rect, prac)
-
+function [rec, status, exception] = start_stroop(run, start, rti, window_ptr, window_rect, prac)
+   
 % ---- configure exception ----
 status = 0;
 exception = [];
 % accu = 0.00;
 
 % ---- configure sequence ----
-if nargin > 3 && prac == 1
+if nargin > 5 && prac == 1
     config = readtable(fullfile("config_prac", "stroop_prac.xlsx"));
 else
     TaskFile = sprintf('stroop_run%d.xlsx', run);
     config = readtable(fullfile("config/stroop", TaskFile));
 end
+config.onset = config.onset + rti;
 rec = config;
 rec.onset_real = nan(height(config), 1);
 rec.resp_raw = cell(height(config), 1);
@@ -19,8 +20,8 @@ rec.resp = cell(height(config), 1);
 rec.rt = nan(height(config), 1);
 
 timing = struct(...
-    'iti', 0.5, ...
-    'tdur', 2.5);
+    'iti', 0.5, ... 
+    'tdur', 2.5); 
 
 imageFolder = 'stimuli/stroop_stimuli';
 
@@ -28,7 +29,7 @@ imageFolder = 'stimuli/stroop_stimuli';
 keys = struct(...
     'start', KbName('s'), ...
     'exit', KbName('Escape'), ...
-    'red', KbName('1!'), ...
+     'red', KbName('1!'), ...
     'yellow', KbName('2@'), ...
     'blue', KbName('3#'), ...
     'green', KbName('4$'));
@@ -44,16 +45,6 @@ try
     % get inter flip interval
     ifi = Screen('GetFlipInterval', window_ptr);
 
-    % display welcome/instr screen and wait for a press of 's' to start
-    Inst = imread('Instruction\Stroop.jpg');
-    tex = Screen('MakeTexture',window_ptr, Inst);
-    Screen('DrawTexture', window_ptr, tex);
-    Screen('Flip', window_ptr);   % show stim, return flip time
-    WaitSecs(4.5);
-    vbl = Screen('Flip', window_ptr);
-    WaitSecs(0.5);
-    start_time = vbl + 0.5;
-
     % main experiment
     for trial_order = 1:height(config)
         if early_exit
@@ -66,7 +57,7 @@ try
         resp_code = nan;
 
         % initialize stimulus timestamps
-        stim_onset = start_time + this_trial.onset;
+        stim_onset = start + this_trial.onset;
         stim_offset = stim_onset + timing.tdur;
         trial_end = stim_offset + timing.iti;
         onset_timestamp = nan;
@@ -102,7 +93,7 @@ try
                 [imgHeight, imgWidth, ~] = size(Image);
                 Rect = CenterRectOnPoint([0 0 imgWidth imgHeight], xcenter, ycenter);
                 Screen('DrawTexture', window_ptr, Texture, [], Rect);
-                vbl = Screen('Flip', window_ptr);
+                 vbl = Screen('Flip', window_ptr);
                 if isnan(onset_timestamp)
                     onset_timestamp = vbl;
                 end
@@ -126,31 +117,15 @@ try
             rt = resp_timestamp - onset_timestamp;
         end
         score = strcmp(rec.color(trial_order), resp);
-        rec.onset_real(trial_order) = onset_timestamp - start_time;
+        rec.onset_real(trial_order) = onset_timestamp - start;
         rec.resp_raw{trial_order} = resp_raw;
         rec.resp{trial_order} = resp;
         rec.rt(trial_order) = rt;
         rec.cort(trial_order) = score;
     end
-    % accu = sum(rec{:, 12} == 1) / (height(config));
+    
 catch exception
     status = -1;
 end
 
-% % --- post presentation jobs
-% Screen('Close');
-% sca;
-% % enable character input and show mouse cursor
-% ListenChar;
-% ShowCursor;
-%
-% % ---- restore preferences ----
-% Screen('Preference', 'VisualDebugLevel', old_visdb);
-% Screen('Preference', 'SkipSyncTests', old_sync);
-% Screen('Preference', 'TextRenderer', old_text_render);
-% Priority(old_pri);
-%
-% if ~isempty(exception)
-%     rethrow(exception)
-% end
 end

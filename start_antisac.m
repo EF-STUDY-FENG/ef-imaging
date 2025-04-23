@@ -1,4 +1,4 @@
-function [rec, status, exception] = start_antisac(run, window_ptr, window_rect, prac)
+function [rec, status, exception] = start_antisac(run, start, rti, window_ptr, window_rect, prac)
 
 % ---- configure exception ----
 status = 0;
@@ -6,12 +6,13 @@ exception = [];
 % accu = 0.00;
 
 % ---- configure sequence ----
-if nargin > 3 && prac == 1
+if nargin > 5 && prac == 1
     config = readtable(fullfile("config_prac", "antisac_prac.xlsx"));
 else
     TaskFile = sprintf('antisac_run%d.xlsx', run);
     config = readtable(fullfile("config/antisac", TaskFile));
 end
+config.onset = config.onset + rti;
 rec = config;
 rec.onset_real = nan(height(config), 1);
 rec.resp = cell(height(config), 1);
@@ -43,25 +44,15 @@ try
     [screenWidth, screenHeight] = Screen('WindowSize', window_ptr);
     % get inter flip interval
     ifi = Screen('GetFlipInterval', window_ptr);
-
+    
     % ---- configure stimuli ----
-    matrixSize = 0.06 * screenHeight;
-    xLeftCenter = 0.3 * screenWidth;
+    matrixSize = 0.06 * screenHeight; 
+    xLeftCenter = 0.3 * screenWidth; 
     xRightCenter = 0.7 * screenWidth;
     leftMatrixRect = [xLeftCenter - matrixSize/2, ycenter - matrixSize/2, ...
-        xLeftCenter + matrixSize/2, ycenter + matrixSize/2];
+                  xLeftCenter + matrixSize/2, ycenter + matrixSize/2];
     rightMatrixRect = [xRightCenter - matrixSize/2, ycenter - matrixSize/2, ...
-        xRightCenter + matrixSize/2, ycenter + matrixSize/2];
-
-    % display welcome/instr screen and wait for a press of 's' to start
-    Inst = imread('Instruction\antisac.jpg');  %%% instruction
-    tex=Screen('MakeTexture', window_ptr, Inst);
-    Screen('DrawTexture', window_ptr, tex);
-    Screen('Flip', window_ptr);
-    WaitSecs(4.5);
-    vbl = Screen('Flip', window_ptr); % show inst, return flip time
-    WaitSecs(0.5);
-    start_time = vbl + 0.5;
+                   xRightCenter + matrixSize/2, ycenter + matrixSize/2];
 
     % main experiment
     for trial_order = 1:height(config)
@@ -76,7 +67,7 @@ try
         resp_code = nan;
 
         % initialize stimulus timestamps
-        fixation_onset = start_time + this_trial.onset;
+        fixation_onset = start + this_trial.onset;
         cue_onset = fixation_onset + this_trial.Fixation_Dur;
         tar_onset = cue_onset + timing.cue_dur;
         mask_onset = tar_onset + timing.tar_dur;
@@ -90,19 +81,19 @@ try
         vbl = Screen('Flip', window_ptr, fixation_onset+0.5*ifi);
         if isnan(fixation_timestamp)
             fixation_timestamp = vbl;
-            tmp(trial_order, 1) = vbl - start_time; % fixation onset
+            tmp(trial_order, 1) = vbl - start; % fixation onset
         end
-
+        
         % present a gray square as cue
         if this_trial.Location_Of == 1
             Screen('FillRect', window_ptr, GrayIndex(window_ptr), rightMatrixRect);
         else
-            Screen('FillRect', window_ptr, GrayIndex(window_ptr), leftMatrixRect);
+            Screen('FillRect', window_ptr, GrayIndex(window_ptr), leftMatrixRect);          
         end
         vbl = Screen('Flip', window_ptr, cue_onset+0.5*ifi);
-
-        tmp(trial_order, 2) = vbl - start_time; % cue onset;
-
+        
+        tmp(trial_order, 2) = vbl - start; % cue onset;
+        
         % check user's response
         while ~early_exit
             [key_pressed, timestamp, key_code] = KbCheck(-1);
@@ -129,7 +120,7 @@ try
                 vbl = Screen('Flip', window_ptr);
                 if isnan(tar_timestamp)
                     tar_timestamp = vbl;
-                    tmp(trial_order, 3) = vbl - start_time; % tar onset;
+                    tmp(trial_order, 3) = vbl - start; % tar onset;
                 end
             elseif timestamp >= mask_onset + 0.5 * ifi && timestamp < trial_end - 0.5 * ifi
                 % present a white square as mask to block the target
@@ -139,7 +130,7 @@ try
                     Screen('FillRect', window_ptr, WhiteIndex(window_ptr), rightMatrixRect);
                 end
                 vbl = Screen('Flip', window_ptr);
-                tmp(trial_order, 4) = vbl - start_time; % mask onset;
+                tmp(trial_order, 4) = vbl - start; % mask onset;
             end
         end
 
@@ -159,14 +150,13 @@ try
             rt = resp_timestamp - tar_timestamp;
         end
         score = strcmp(rec.cresp(trial_order), resp);
-        rec.onset_real(trial_order) = fixation_timestamp - start_time;
+        rec.onset_real(trial_order) = fixation_timestamp - start  ;
         rec.resp{trial_order} = resp;
         rec.rt(trial_order) = rt;
         rec.cort(trial_order) = score;
 
 
     end
-    % accu = sum(rec{:, 10} == 1) / height(config);
 
 catch exception
     status = -1;
@@ -176,7 +166,7 @@ end
 
 function arrow(matrixSize, window_ptr, loc, dir)
 [screenWidth, screenHeight] = Screen('WindowSize', window_ptr);
-ycenter = screenHeight / 2;
+ycenter = screenHeight / 2; 
 if loc == 1
     xcenter = 0.3 * screenWidth;
 else
@@ -184,7 +174,7 @@ else
 end
 
 squ = [xcenter - matrixSize/2, ycenter - matrixSize/2, ...
-    xcenter + matrixSize/2, ycenter + matrixSize/2];
+                  xcenter + matrixSize/2, ycenter + matrixSize/2];
 
 arrH1 = 0.9 * matrixSize;
 arrH2 = 0.4 * matrixSize;
@@ -194,44 +184,44 @@ arrW2 = 0.15 * matrixSize;
 switch dir
     case 1 % left arrow
         arrowPoints = [
-            xcenter - arrH1/2,       ycenter          ;
-            xcenter          ,       ycenter + arrW1/2;
-            xcenter - arrH2/2,       ycenter + arrW2/2;
+            xcenter - arrH1/2,       ycenter          ; 
+            xcenter          ,       ycenter + arrW1/2; 
+            xcenter - arrH2/2,       ycenter + arrW2/2; 
             xcenter + arrH1/2,       ycenter + arrW2/2;
             xcenter + arrH1/2,       ycenter - arrW2/2;
             xcenter - arrH2/2,       ycenter - arrW2/2;
             xcenter          ,       ycenter - arrW1/2;
-            ];
+        ];
     case 2 % up arrow
         arrowPoints = [
-            xcenter,                 ycenter - arrH1/2;
-            xcenter - arrW1/2,       ycenter          ;
-            xcenter - arrW2/2,       ycenter - arrH2/2;
+            xcenter,                 ycenter - arrH1/2; 
+            xcenter - arrW1/2,       ycenter          ; 
+            xcenter - arrW2/2,       ycenter - arrH2/2; 
             xcenter - arrW2/2,       ycenter + arrH1/2;
             xcenter + arrW2/2,       ycenter + arrH1/2;
             xcenter + arrW2/2,       ycenter - arrH2/2;
             xcenter + arrW1/2,       ycenter          ;
-            ];
+        ];
     case 3 % down arrow
         arrowPoints = [
-            xcenter,                 ycenter + arrH1/2;
-            xcenter - arrW1/2,       ycenter          ;
-            xcenter - arrW2/2,       ycenter + arrH2/2;
+            xcenter,                 ycenter + arrH1/2; 
+            xcenter - arrW1/2,       ycenter          ; 
+            xcenter - arrW2/2,       ycenter + arrH2/2; 
             xcenter - arrW2/2,       ycenter - arrH1/2;
             xcenter + arrW2/2,       ycenter - arrH1/2;
             xcenter + arrW2/2,       ycenter + arrH2/2;
             xcenter + arrW1/2,       ycenter          ;
-            ];
+        ];
     case 4 % right arrow
         arrowPoints = [
-            xcenter + arrH1/2,       ycenter          ;
-            xcenter          ,       ycenter + arrW1/2;
-            xcenter + arrH2/2,       ycenter + arrW2/2;
+            xcenter + arrH1/2,       ycenter          ; 
+            xcenter          ,       ycenter + arrW1/2; 
+            xcenter + arrH2/2,       ycenter + arrW2/2; 
             xcenter - arrH1/2,       ycenter + arrW2/2;
             xcenter - arrH1/2,       ycenter - arrW2/2;
             xcenter + arrH2/2,       ycenter - arrW2/2;
             xcenter          ,       ycenter - arrW1/2;
-            ];
+        ];
 end
 
 Screen('FillRect', window_ptr, WhiteIndex(window_ptr), squ);

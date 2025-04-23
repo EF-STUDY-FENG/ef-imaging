@@ -1,17 +1,17 @@
-function [rec, status, exception] = start_sizelife(run, window_ptr, window_rect, prac)
+function [rec, status, exception] = start_sizelife(run, start, rti, window_ptr, window_rect, prac)
 
 % ---- configure exception ----
 status = 0;
 exception = [];
-% accu = 0.00;
 
 % ---- configure sequence ----
-if nargin > 3 && prac == 1
+if nargin > 5 && prac == 1
     config = readtable(fullfile("config_prac", "sizelife_prac.xlsx"));
 else
     TaskFile = sprintf('sizelife_run%d.xlsx', run);
     config = readtable(fullfile("config/sizelife", TaskFile));
 end
+config.onset = config.onset + rti;
 rec = config;
 rec.onset_real = nan(height(config), 1);
 rec.resp_raw = cell(height(config), 1);
@@ -38,17 +38,7 @@ try
     [~, ~] = RectCenter(window_rect);
     % get inter flip interval
     ifi = Screen('GetFlipInterval', window_ptr);
-
-    % display welcome/instr screen and wait for a press of 's' to start
-    sq=imread('Instruction\sizelife.jpg');
-    tex=Screen('MakeTexture',window_ptr,sq);
-    Screen('DrawTexture',window_ptr,tex);
-    Screen('Flip',window_ptr);
-    WaitSecs(4.5);
-    vbl = Screen('Flip', window_ptr);
-    WaitSecs(0.5);
-    start_time = vbl + 0.5;
-
+    
     % main experiment
     for trial_order = 1:height(config)
         if early_exit
@@ -61,7 +51,7 @@ try
         resp_code = nan;
 
         % initialize stimulus timestamps
-        stim_onset = start_time + this_trial.onset;
+        stim_onset = start + this_trial.onset;
         stim_offset = stim_onset + timing.tdur;
         trial_end = stim_offset + timing.iti;
         onset_timestamp = nan;
@@ -92,48 +82,48 @@ try
                 end
 
             elseif timestamp < stim_offset - 0.5 * ifi
-                centerImg_name = this_trial.pic;
-                topImg_name = this_trial.task;
-                centerImg = fullfile(imageFolder, centerImg_name);
-                topImg = fullfile(imageFolder, topImg_name);
+                   centerImg_name = this_trial.pic;
+                   topImg_name = this_trial.task;
+                   centerImg = fullfile(imageFolder, centerImg_name);
+                   topImg = fullfile(imageFolder, topImg_name);
 
-                % Ensure centerImg is a character vector or string scalar
-                if iscell(centerImg)
-                    centerImg = centerImg{1};
-                end
+                   % Ensure centerImg is a character vector or string scalar
+                   if iscell(centerImg)
+                       centerImg = centerImg{1};  
+                   end
 
-                if iscell(topImg)
-                    topImg = topImg{1};  % Extract cell content
-                end
-                centerImage = imread(centerImg);
-                topImage = imread(topImg);
+                   if iscell(topImg)
+                      topImg = topImg{1};  % Extract cell content
+                   end
+                   centerImage = imread(centerImg);
+                   topImage = imread(topImg);
+                   
+                   % Reduce the picture to normal
+                   centerImage = imresize(centerImage, 0.44, "nearest");
 
-                % Reduce the picture to normal
-                centerImage = imresize(centerImage, 0.44, "nearest");
+                   % Create texture
+                   centerTexture = Screen('MakeTexture', window_ptr, centerImage);
+                   topTexture = Screen('MakeTexture', window_ptr, topImage);
+                   [screenWidth, screenHeight] = Screen('WindowSize', window_ptr);
 
-                % Create texture
-                centerTexture = Screen('MakeTexture', window_ptr, centerImage);
-                topTexture = Screen('MakeTexture', window_ptr, topImage);
-                [screenWidth, screenHeight] = Screen('WindowSize', window_ptr);
+                   % Calculate dimensions for the center image while maintaining aspect ratio
+                   centerWidth = size(centerImage, 2); 
+                   centerHeight = size(centerImage, 1); 
+                   centerRect = [0, 0, centerWidth, centerHeight];
+                   centerRect = CenterRectOnPoint(centerRect, screenWidth / 2, screenHeight / 2);
 
-                % Calculate dimensions for the center image while maintaining aspect ratio
-                centerWidth = size(centerImage, 2);
-                centerHeight = size(centerImage, 1);
-                centerRect = [0, 0, centerWidth, centerHeight];
-                centerRect = CenterRectOnPoint(centerRect, screenWidth / 2, screenHeight / 2);
+                   % Calculate dimensions for the top image while maintaining aspect ratio
+                   topWidth = size(topImage, 2); 
+                   topHeight = size(topImage, 1); 
+                   topRect = [0, 0, topWidth, topHeight];
+                   topY = centerRect(2) - topHeight - 15;                  
+                   topRect = CenterRectOnPoint(topRect, screenWidth/2, topY); 
 
-                % Calculate dimensions for the top image while maintaining aspect ratio
-                topWidth = size(topImage, 2);
-                topHeight = size(topImage, 1);
-                topRect = [0, 0, topWidth, topHeight];
-                topY = centerRect(2) - topHeight - 15;
-                topRect = CenterRectOnPoint(topRect, screenWidth/2, topY);
-
-                % Draw the textures on the screen
-                Screen('DrawTexture', window_ptr, centerTexture, [], centerRect);
-                Screen('DrawTexture', window_ptr, topTexture, [], topRect);
-                vbl = Screen('Flip', window_ptr);
-
+                   % Draw the textures on the screen
+                   Screen('DrawTexture', window_ptr, centerTexture, [], centerRect);
+                   Screen('DrawTexture', window_ptr, topTexture, [], topRect);
+                   vbl = Screen('Flip', window_ptr);
+ 
                 if isnan(onset_timestamp)
                     onset_timestamp = vbl;
                 end
@@ -156,14 +146,13 @@ try
             end
             rt = resp_timestamp - onset_timestamp;
         end
-        score = strcmp(rec.cresp(trial_order), resp);
-        rec.onset_real(trial_order) = onset_timestamp - start_time;
+        score = strcmp(rec.cresp(trial_order), resp); 
+        rec.onset_real(trial_order) = onset_timestamp - start;
         rec.resp_raw{trial_order} = resp_raw;
         rec.resp{trial_order} = resp;
         rec.rt(trial_order) = rt;
         rec.cort(trial_order) = score;
     end
-    % accu = sum(rec{:, 10} == 1) / (height(config));
 
 catch exception
     status = -1;

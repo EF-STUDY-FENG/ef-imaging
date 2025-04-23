@@ -1,19 +1,18 @@
-function [rec, out_ssd, status, exception] = start_stopsignal(run, window_ptr, window_rect, init_ssd, prac)
+function [rec, out_ssd, status, exception] = start_stopsignal(run, start, rti, window_ptr, window_rect, init_ssd, prac)
 
 % ---- configure exception ----
 status = 0;
 exception = [];
-% accu = 0.00;
 
 % ---- configure sequence ----
-if nargin > 4 && prac == 1
+if nargin > 6 && prac == 1
     config = readtable(fullfile("config_prac", "stopsignal_prac.xlsx"));
 else
     TaskFile = sprintf('stopsignal_run%d.xlsx', run);
     config = readtable(fullfile("config/stopsignal", TaskFile));
 end
 rec = config;
-rec.onset = (0:1.5:1.5*(height(config)-1))';
+rec.onset = (rti:1.5:rti+1.5*(height(config)-1))';
 rec.onset_real = nan(height(config), 1);
 rec.ssd = nan(height(config), 1);
 rec.resp_raw = cell(height(config), 1);
@@ -21,7 +20,7 @@ rec.resp = cell(height(config), 1);
 rec.rt = nan(height(config), 1);
 rec.acc = nan(height(config), 1);
 out_ssd = [];
-if ~(nargin == 4)
+if ~(nargin == 6)
     init_ssd = [0.2, 0.6];
 end
 last_ssd = [nan, nan];
@@ -43,7 +42,7 @@ early_exit = false;
 try
     % get screen center
     [xcenter, ycenter] = RectCenter(window_rect);
-
+    
     % get inter flip interval
     ifi = Screen('GetFlipInterval', window_ptr);
 
@@ -60,16 +59,6 @@ try
         arrow_length/2, 0;              % tip
         -arrow_length/2, arrow_width/2    % base bottom
         ]';
-
-    % display welcome/instr screen and wait for a press of 's' to start
-    Inst = imread('Instruction\stopsignal.jpg');  %%% instruction
-    tex = Screen('MakeTexture', window_ptr, Inst);
-    Screen('DrawTexture', window_ptr, tex);
-    Screen('Flip', window_ptr);   % show stim, return flip time
-    WaitSecs(4.5);
-    vbl = Screen('Flip', window_ptr);
-    WaitSecs(0.5);
-    start_time = vbl + 0.5;
 
     % main experiment
 
@@ -97,7 +86,7 @@ try
             end
             last_ssd(ssd_idx) = ssd;
             out_ssd(ssd_idx) = ssd;
-
+            
         end
 
         % initialize responses
@@ -105,7 +94,7 @@ try
         resp_code = nan;
 
         % initialize stimulus timestamps
-        stim_onset = start_time + this_trial.onset;
+        stim_onset = start + this_trial.onset;
         stim_offset = stim_onset + timing.tdur;
         trial_end = stim_offset + timing.iti;
         onset_timestamp = nan;
@@ -200,15 +189,14 @@ try
                 last_stop(ssd_idx) = 0;
             end
         end
-        rec.onset_real(trial_order) = onset_timestamp - start_time;
+        rec.onset_real(trial_order) = onset_timestamp - start;
         rec.ssd(trial_order) = ssd;
         rec.resp_raw{trial_order} = resp_raw;
         rec.resp{trial_order} = resp;
         rec.rt(trial_order) = rt;
         rec.acc(trial_order) = acc;
     end
-    % accu = sum(rec{:, 9} == 1) / height(config);
-
+    
 catch exception
     status = -1;
 end
