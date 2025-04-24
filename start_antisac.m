@@ -1,4 +1,4 @@
-function [rec, status, exception] = start_antisac(run, window_ptr, window_rect, prac)
+function [rec, status, exception] = start_antisac(run, start, rti, window_ptr, window_rect, prac)
 
 % ---- configure exception ----
 status = 0;
@@ -6,12 +6,13 @@ exception = [];
 % accu = 0.00;
 
 % ---- configure sequence ----
-if nargin > 3 && prac == 1
+if nargin > 5 && prac == 1
     config = readtable(fullfile("config_prac", "antisac_prac.xlsx"));
 else
     TaskFile = sprintf('antisac_run%d.xlsx', run);
     config = readtable(fullfile("config/antisac", TaskFile));
 end
+config.onset = config.onset + rti;
 rec = config;
 rec.onset_real = nan(height(config), 1);
 rec.resp = cell(height(config), 1);
@@ -53,16 +54,6 @@ try
     rightMatrixRect = [xRightCenter - matrixSize/2, ycenter - matrixSize/2, ...
         xRightCenter + matrixSize/2, ycenter + matrixSize/2];
 
-    % display welcome/instr screen and wait for a press of 's' to start
-    Inst = imread('Instruction\antisac.jpg');  %%% instruction
-    tex=Screen('MakeTexture', window_ptr, Inst);
-    Screen('DrawTexture', window_ptr, tex);
-    Screen('Flip', window_ptr);
-    WaitSecs(4.5);
-    vbl = Screen('Flip', window_ptr); % show inst, return flip time
-    WaitSecs(0.5);
-    start_time = vbl + 0.5;
-
     % main experiment
     for trial_order = 1:height(config)
         if early_exit
@@ -76,7 +67,7 @@ try
         resp_code = nan;
 
         % initialize stimulus timestamps
-        fixation_onset = start_time + this_trial.onset;
+        fixation_onset = start + this_trial.onset;
         cue_onset = fixation_onset + this_trial.Fixation_Dur;
         tar_onset = cue_onset + timing.cue_dur;
         mask_onset = tar_onset + timing.tar_dur;
@@ -90,7 +81,7 @@ try
         vbl = Screen('Flip', window_ptr, fixation_onset+0.5*ifi);
         if isnan(fixation_timestamp)
             fixation_timestamp = vbl;
-            tmp(trial_order, 1) = vbl - start_time; % fixation onset
+            tmp(trial_order, 1) = vbl - start; % fixation onset
         end
 
         % present a gray square as cue
@@ -101,7 +92,7 @@ try
         end
         vbl = Screen('Flip', window_ptr, cue_onset+0.5*ifi);
 
-        tmp(trial_order, 2) = vbl - start_time; % cue onset;
+        tmp(trial_order, 2) = vbl - start; % cue onset;
 
         % check user's response
         while ~early_exit
@@ -129,7 +120,7 @@ try
                 vbl = Screen('Flip', window_ptr);
                 if isnan(tar_timestamp)
                     tar_timestamp = vbl;
-                    tmp(trial_order, 3) = vbl - start_time; % tar onset;
+                    tmp(trial_order, 3) = vbl - start; % tar onset;
                 end
             elseif timestamp >= mask_onset + 0.5 * ifi && timestamp < trial_end - 0.5 * ifi
                 % present a white square as mask to block the target
@@ -139,7 +130,7 @@ try
                     Screen('FillRect', window_ptr, WhiteIndex(window_ptr), rightMatrixRect);
                 end
                 vbl = Screen('Flip', window_ptr);
-                tmp(trial_order, 4) = vbl - start_time; % mask onset;
+                tmp(trial_order, 4) = vbl - start; % mask onset;
             end
         end
 
@@ -159,14 +150,11 @@ try
             rt = resp_timestamp - tar_timestamp;
         end
         score = strcmp(rec.cresp(trial_order), resp);
-        rec.onset_real(trial_order) = fixation_timestamp - start_time;
+        rec.onset_real(trial_order) = fixation_timestamp - start;
         rec.resp{trial_order} = resp;
         rec.rt(trial_order) = rt;
         rec.cort(trial_order) = score;
-
-
     end
-    % accu = sum(rec{:, 10} == 1) / height(config);
 
 catch exception
     status = -1;

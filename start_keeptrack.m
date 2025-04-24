@@ -1,21 +1,20 @@
-function [rec, dur, status, exception] = start_keeptrack(run, window_ptr, window_rect, prac)
-% arguments
-%     opts.SkipSyncTests (1, 1) {mustBeNumericOrLogical} = false
-% end
+function [rec, status, exception] = start_keeptrack(run, start, rti, window_ptr, window_rect, prac)
 
 % ---- configure exception ----
 status = 0;
 exception = [];
-% accu = 0.00;
-dur = 0;
+
 % ---- configure sequence ----
 p.maxTri = 4;
 p.level = 3;
 % Errors = 0;
 config = readtable(fullfile("config/keeptrack", 'keeptrack.xlsx'));
+config.onset = config.onset + rti;
 rec = table();
 rec.level(1:4) = config.level(1:4);
-if nargin > 3 && prac == 1
+rec.offset_real = nan(height(rec), 1);
+
+if nargin > 5 && prac == 1
     rec.run(1:4) = eval(sprintf('config.prac(1:4)'));
 else
     rec.run(1:4) = eval(sprintf('config.run%d(1:4)',run));
@@ -43,16 +42,6 @@ try
     [~, ycenter] = RectCenter(window_rect);
     screenWidth = window_rect(3);
 
-    % display welcome/instr screen and wait for a press of 's' to start
-    Inst = imread('Instruction\keeptrack.jpg');
-    tex = Screen('MakeTexture',window_ptr, Inst);
-    Screen('DrawTexture', window_ptr, tex);
-    Screen('Flip',window_ptr);
-    WaitSecs(4.5);
-    vbl = Screen('Flip',window_ptr);
-    WaitSecs(0.5);
-    start_time = vbl + 0.5;
-
     % main experiment
     for trial = 1:p.maxTri
         if early_exit
@@ -64,8 +53,9 @@ try
         this_trial(2) = config.ans_time(trial);
 
         % initialize stimulus timestamps
-        ans_onset = start_time + this_trial(1) + p.level*3;
+        ans_onset = start + this_trial(1) + p.level*3;
         trial_end = ans_onset + this_trial(2);
+        onset_timestamp = nan;
 
         % initialize responses
         corr = [];
@@ -175,14 +165,15 @@ try
             if vbl < trial_end
                 WaitSecs(trial_end - vbl);
             end
+            vbl = Screen('Flip', window_ptr);
+            if isnan(onset_timestamp)
+                onset_timestamp = vbl;
+            end
+            rec.offset_real(trial) = onset_timestamp - start;
             p.level = p.level + 1;
             break
         end
     end
-    % accu = sum(rec{:, 3} == 1) / p.maxTri;
-    Endtime = GetSecs;
-    dur = Endtime - start_time;
-
 
 catch exception
     status = -1;
