@@ -1,23 +1,11 @@
 %%% ---- Folder Config  ---- %%%
-prompt = {'SubID:', 'Run:'};
+prompt = {'SubID:'};
 dlgtitle = 'sub-config';
 num_lines = 1;
-% Check whether there are saved parameters
-if evalin('base', 'exist(''savedParams'', ''var'')')
-    savedParams = evalin('base', 'savedParams');
-    definput = [savedParams(1), {''}];
-else
-    % For the first run, all parameters are set to empty by default
-    definput = {'', ''};
-end
-subconfig = inputdlg(prompt,dlgtitle,num_lines, definput);
 
-% If it is the first run, save the first three parameters to the base workspace
-if ~evalin('base', 'exist(''savedParams'', ''var'')')
-    assignin('base', 'savedParams', subconfig(1));
-end
+subconfig = inputdlg(prompt,dlgtitle,num_lines);
 
-outFolderName = 'Results';
+outFolderName = 'TestResults';
 outFolderPath = fullfile(pwd, outFolderName);
 if ~exist(outFolderPath, 'dir') % Created Folder, if the folder does not exist
     mkdir(outFolderPath);
@@ -26,7 +14,8 @@ end
 % % ---- configure exception ----
 status = 0;
 exception = [];
-run = str2double(subconfig{2});
+% subconfig{2} = 1;
+run = 1;
 
 % ---- configure screen and window ----
 % setup default level of 2
@@ -49,7 +38,7 @@ keys = struct( ...
     'start', KbName('s'), ...
     'exit', KbName('Escape'));
 
-% ---- seq config ----
+% ---- seq config ---- %
 config = readtable(fullfile("config/main_program", 'seq.xlsx'));
 n = str2num(strjoin(config.run(run)));
 
@@ -85,7 +74,7 @@ try
         [~, key_code] = KbStrokeWait(-1);
         if key_code(keys.start)
             vbl = Screen('Flip',window_ptr);
-            start_timestamp = vbl;
+            start = vbl;
             break
         elseif key_code(keys.exit)
             early_exit = true;
@@ -95,16 +84,16 @@ try
     % --- Main Program --- %
     funcSeq = {'numlet', 'let3back', 'stroop', 'antisac', 'colshp', ...
         'spt2back', 'keeptrack', 'sizelife', 'stopsignal'};
-    run_start = 0;
+
     for idx = 1:length(n)
-        [run_start, taskonset_timestamp] = instPlayed(funcSeq{n(idx)}, start_timestamp, window_ptr, run_start);
-        rti = taskonset_timestamp - start_timestamp; % Run and Task Interval
-        generalFunc(funcSeq{n(idx)}, run, start_timestamp, rti, subconfig, window_ptr, window_rect, outFolderPath);
+        taskonset_timestamp = instPlayed(funcSeq{n(idx)}, window_ptr);
+        rti = taskonset_timestamp - start; % Run and Task Interval
+        generalFunc(funcSeq{n(idx)}, run, start, rti, subconfig, window_ptr, window_rect, outFolderPath, 1);
     end
 
     % ---- END Inst Display ---- %
     endtime = GetSecs;
-    dur = endtime - start_timestamp;
+    dur = endtime - start;
     Screen('Flip', window_ptr);
     DrawFormattedText(window_ptr, double('请闭眼等待'), 'center', 'center', WhiteIndex(window_ptr));
     Screen('Flip', window_ptr);   % show stim, return flip time
@@ -133,33 +122,18 @@ if ~isempty(exception)
 end
 
 %% ---- Call Each Task Function ---- %%
-function generalFunc(taskName, run, start, rti, subconfig, window_ptr, window_rect, outFolderPath)
+function generalFunc(taskName, run, start, rti, subconfig, window_ptr, window_rect, outFolderPath, prac)
 funcName = ['start_', taskName];
-func = str2func(funcName);
 try
     if strcmp(funcName, 'start_stopsignal')
         % Handle stopsignal task
-        if run == 1
-            [rec, out_ssd] = func(run, start, rti, window_ptr, window_rect);
-            % save ssd to next run
-            out_ssd_folder = sprintf('stimuli/%s_ssd/Sub%s', taskName, subconfig{1});
-            if ~exist(out_ssd_folder, 'dir')
-                mkdir(fullfile(pwd, out_ssd_folder));
-            end
-            ssd_run = sprintf('run%d.mat', run);
-            out_ssd_place = fullfile(out_ssd_folder, ssd_run);
-            save(out_ssd_place, "out_ssd");
-        else
-            init_ssd_place = sprintf('stimuli/%s_ssd/Sub%s/run%d.mat',taskName, subconfig{1}, run-1);
-            load(init_ssd_place, "out_ssd"); % load the previous saved ssd
-            init_ssd = out_ssd;
-            [rec, out_ssd] = start_stopsignal(run, window_ptr, window_rect, init_ssd);
-            out_ssd_place = sprintf('stimuli/%s_ssd/Sub%s/run%d.mat',taskName, subconfig{1}, run);
-            save(out_ssd_place, "out_ssd");
-        end
+        [rec, out_ssd] = taskpool.start_stopsignal(run, start, rti, window_ptr, window_rect, [], prac);
+        ssd_run = sprintf('sub%s_outssd.mat', subconfig{1});
+        out_ssd_place = fullfile(outFolderPath, ssd_run);
+        save(out_ssd_place, "out_ssd");
     else
         % Call other tasks normally
-        rec = func(run, start, rti, window_ptr, window_rect);
+        rec = taskpool.(funcName)(run, start, rti, window_ptr, window_rect);
     end
     save_task_data(funcName, rec, subconfig, outFolderPath);
 catch ME
@@ -170,9 +144,8 @@ end
 %% ---- Save Data Function ---- %%
 function save_task_data(taskName, rec, subconfig, outFolderPath)
 
-run = subconfig{2};
-filename = sprintf('sub-%s_task-%s_run-%s_events.tsv',...
-    subconfig{1}, taskName, run);
+filename = sprintf('sub-%s_task-%s_prac_events.tsv',...
+    subconfig{1}, taskName);
 
 writetable(rec, fullfile(outFolderPath, filename),...
     'FileType', 'text',...
@@ -180,22 +153,16 @@ writetable(rec, fullfile(outFolderPath, filename),...
 end
 
 %% ---- Inst Played Function ---- %%
-function [run_start, taskonset_timestamp] = instPlayed(taskName, start, window_ptr, run_start)
-Instoffset_timestamp = run_start + 4.5 + start; % define inst display time
-taskonset_timestamp = Instoffset_timestamp + 0.5; % define taskonset timestamp
+function taskonset_timestamp = instPlayed(taskName, window_ptr)
+
 Inst = imread(sprintf('Instruction\\%s.jpg', taskName));  %%% instruction
 tex=Screen('MakeTexture', window_ptr, Inst);
 Screen('DrawTexture', window_ptr, tex);
-Screen('Flip', window_ptr); % show inst
-Screen('Flip', window_ptr, Instoffset_timestamp);
+Screen('Flip', window_ptr);
+WaitSecs(4.5);
+vbl = Screen('Flip', window_ptr); % show inst, return flip time
 if ~strcmp(taskName, 'spt2back')
-    Screen('Flip', window_ptr, taskonset_timestamp);
-else
-    taskonset_timestamp = Instoffset_timestamp;
+    WaitSecs(0.5);
 end
-if strcmp(taskName, 'keeptrack')
-    run_start = run_start + 79; % keeptrack task lasts for 74s + 5s(inst display)
-else
-    run_start = run_start + 65; % Each task lasts for 60s + 5s(inst display)
-end
+taskonset_timestamp = vbl + 0.5;
 end
