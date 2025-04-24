@@ -139,7 +139,7 @@ try
     if strcmp(funcName, 'start_stopsignal')
         % Handle stopsignal task
         if run == 1
-            [rec, out_ssd] = taskpool.start_stopsignal(run, start, rti, window_ptr, window_rect);
+            [rec, out_ssd] = taskpool.start_stopsignal(run, start, rti, window_ptr, window_rect, []);
             % save ssd to next run
             out_ssd_folder = sprintf('stimuli/%s_ssd/Sub%s', taskName, subconfig{1});
             if ~exist(out_ssd_folder, 'dir')
@@ -152,7 +152,7 @@ try
             init_ssd_place = sprintf('stimuli/%s_ssd/Sub%s/run%d.mat',taskName, subconfig{1}, run-1);
             load(init_ssd_place, "out_ssd"); % load the previous saved ssd
             init_ssd = out_ssd;
-            [rec, out_ssd] = taskpool.start_stopsignal(run, window_ptr, window_rect, init_ssd);
+            [rec, out_ssd] = taskpool.start_stopsignal(run, start, rti, window_ptr, window_rect, init_ssd);
             out_ssd_place = sprintf('stimuli/%s_ssd/Sub%s/run%d.mat',taskName, subconfig{1}, run);
             save(out_ssd_place, "out_ssd");
         end
