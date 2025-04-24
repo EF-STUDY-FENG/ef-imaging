@@ -86,8 +86,8 @@ try
            'spt2back', 'keeptrack', 'sizelife', 'stopsignal'};
     
     for idx = 1:length(n)
-        start_time = instPlayed(funcSeq{n(idx)}, window_ptr);
-        rti = start_time - start; % Run and Task Interval
+        taskonset_timestamp = instPlayed(funcSeq{n(idx)}, window_ptr);
+        rti = taskonset_timestamp - start; % Run and Task Interval
         generalFunc(funcSeq{n(idx)}, run, start, rti, subconfig, window_ptr, window_rect, outFolderPath, 1);
     end
     
@@ -154,7 +154,7 @@ function save_task_data(taskName, rec, subconfig, outFolderPath)
 end
 
 %% ---- Inst Played Function ---- %%
-function start_time = instPlayed(taskName, window_ptr)
+function taskonset_timestamp = instPlayed(taskName, window_ptr)
     
     Inst = imread(sprintf('Instruction\\%s.jpg', taskName));  %%% instruction
     tex=Screen('MakeTexture', window_ptr, Inst);
@@ -165,5 +165,5 @@ function start_time = instPlayed(taskName, window_ptr)
     if ~strcmp(taskName, 'spt2back')
         WaitSecs(0.5);
     end
-    start_time = vbl + 0.5;
+    taskonset_timestamp = vbl + 0.5;
 end

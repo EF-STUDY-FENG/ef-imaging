@@ -98,10 +98,7 @@ try
     run_start = 0;
     for idx = 1:length(n)
         [run_start, taskonset_timestamp] = instPlayed(funcSeq{n(idx)}, start_timestamp, window_ptr, run_start);
-        % [run_start, start_time] = instPlayed(funcSeq{n(idx)}, window_ptr, run_start);
-        disp(run_start)
         rti = taskonset_timestamp - start_timestamp; % Run and Task Interval
-        disp(rti)
         generalFunc(funcSeq{n(idx)}, run, start_timestamp, rti, subconfig, window_ptr, window_rect, outFolderPath);
     end
     
@@ -184,21 +181,21 @@ end
 
 %% ---- Inst Played Function ---- %%
 function [run_start, taskonset_timestamp] = instPlayed(taskName, start, window_ptr, run_start)
-    Instoffset_timestamp = run_start + 4.5 + start;
-    taskonset_timestamp = Instoffset_timestamp + 0.5;
+    Instoffset_timestamp = run_start + 4.5 + start; % define inst display time 
+    taskonset_timestamp = Instoffset_timestamp + 0.5; % define taskonset timestamp
     Inst = imread(sprintf('Instruction\\%s.jpg', taskName));  %%% instruction
     tex=Screen('MakeTexture', window_ptr, Inst);
     Screen('DrawTexture', window_ptr, tex);
-    Screen('Flip', window_ptr);   
-    Screen('Flip', window_ptr, Instoffset_timestamp); % show inst, return flip time
+    Screen('Flip', window_ptr); % show inst
+    Screen('Flip', window_ptr, Instoffset_timestamp); 
     if ~strcmp(taskName, 'spt2back')
         Screen('Flip', window_ptr, taskonset_timestamp);
     else
         taskonset_timestamp = Instoffset_timestamp;
     end
     if strcmp(taskName, 'keeptrack')
-        run_start = run_start + 79;
+        run_start = run_start + 79; % keeptrack task lasts for 74s + 5s(inst display)
     else
-        run_start = run_start + 65;
+        run_start = run_start + 65; % Each task lasts for 60s + 5s(inst display)
     end
 end
