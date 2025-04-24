@@ -44,15 +44,15 @@ try
     [screenWidth, screenHeight] = Screen('WindowSize', window_ptr);
     % get inter flip interval
     ifi = Screen('GetFlipInterval', window_ptr);
-    
+
     % ---- configure stimuli ----
-    matrixSize = 0.06 * screenHeight; 
-    xLeftCenter = 0.3 * screenWidth; 
+    matrixSize = 0.06 * screenHeight;
+    xLeftCenter = 0.3 * screenWidth;
     xRightCenter = 0.7 * screenWidth;
     leftMatrixRect = [xLeftCenter - matrixSize/2, ycenter - matrixSize/2, ...
-                  xLeftCenter + matrixSize/2, ycenter + matrixSize/2];
+        xLeftCenter + matrixSize/2, ycenter + matrixSize/2];
     rightMatrixRect = [xRightCenter - matrixSize/2, ycenter - matrixSize/2, ...
-                   xRightCenter + matrixSize/2, ycenter + matrixSize/2];
+        xRightCenter + matrixSize/2, ycenter + matrixSize/2];
 
     % main experiment
     for trial_order = 1:height(config)
@@ -83,17 +83,17 @@ try
             fixation_timestamp = vbl;
             tmp(trial_order, 1) = vbl - start; % fixation onset
         end
-        
+
         % present a gray square as cue
         if this_trial.Location_Of == 1
             Screen('FillRect', window_ptr, GrayIndex(window_ptr), rightMatrixRect);
         else
-            Screen('FillRect', window_ptr, GrayIndex(window_ptr), leftMatrixRect);          
+            Screen('FillRect', window_ptr, GrayIndex(window_ptr), leftMatrixRect);
         end
         vbl = Screen('Flip', window_ptr, cue_onset+0.5*ifi);
-        
+
         tmp(trial_order, 2) = vbl - start; % cue onset;
-        
+
         % check user's response
         while ~early_exit
             [key_pressed, timestamp, key_code] = KbCheck(-1);
@@ -150,12 +150,10 @@ try
             rt = resp_timestamp - tar_timestamp;
         end
         score = strcmp(rec.cresp(trial_order), resp);
-        rec.onset_real(trial_order) = fixation_timestamp - start  ;
+        rec.onset_real(trial_order) = fixation_timestamp - start;
         rec.resp{trial_order} = resp;
         rec.rt(trial_order) = rt;
         rec.cort(trial_order) = score;
-
-
     end
 
 catch exception
@@ -166,7 +164,7 @@ end
 
 function arrow(matrixSize, window_ptr, loc, dir)
 [screenWidth, screenHeight] = Screen('WindowSize', window_ptr);
-ycenter = screenHeight / 2; 
+ycenter = screenHeight / 2;
 if loc == 1
     xcenter = 0.3 * screenWidth;
 else
@@ -174,7 +172,7 @@ else
 end
 
 squ = [xcenter - matrixSize/2, ycenter - matrixSize/2, ...
-                  xcenter + matrixSize/2, ycenter + matrixSize/2];
+    xcenter + matrixSize/2, ycenter + matrixSize/2];
 
 arrH1 = 0.9 * matrixSize;
 arrH2 = 0.4 * matrixSize;
@@ -184,44 +182,44 @@ arrW2 = 0.15 * matrixSize;
 switch dir
     case 1 % left arrow
         arrowPoints = [
-            xcenter - arrH1/2,       ycenter          ; 
-            xcenter          ,       ycenter + arrW1/2; 
-            xcenter - arrH2/2,       ycenter + arrW2/2; 
+            xcenter - arrH1/2,       ycenter          ;
+            xcenter          ,       ycenter + arrW1/2;
+            xcenter - arrH2/2,       ycenter + arrW2/2;
             xcenter + arrH1/2,       ycenter + arrW2/2;
             xcenter + arrH1/2,       ycenter - arrW2/2;
             xcenter - arrH2/2,       ycenter - arrW2/2;
             xcenter          ,       ycenter - arrW1/2;
-        ];
+            ];
     case 2 % up arrow
         arrowPoints = [
-            xcenter,                 ycenter - arrH1/2; 
-            xcenter - arrW1/2,       ycenter          ; 
-            xcenter - arrW2/2,       ycenter - arrH2/2; 
+            xcenter,                 ycenter - arrH1/2;
+            xcenter - arrW1/2,       ycenter          ;
+            xcenter - arrW2/2,       ycenter - arrH2/2;
             xcenter - arrW2/2,       ycenter + arrH1/2;
             xcenter + arrW2/2,       ycenter + arrH1/2;
             xcenter + arrW2/2,       ycenter - arrH2/2;
             xcenter + arrW1/2,       ycenter          ;
-        ];
+            ];
     case 3 % down arrow
         arrowPoints = [
-            xcenter,                 ycenter + arrH1/2; 
-            xcenter - arrW1/2,       ycenter          ; 
-            xcenter - arrW2/2,       ycenter + arrH2/2; 
+            xcenter,                 ycenter + arrH1/2;
+            xcenter - arrW1/2,       ycenter          ;
+            xcenter - arrW2/2,       ycenter + arrH2/2;
             xcenter - arrW2/2,       ycenter - arrH1/2;
             xcenter + arrW2/2,       ycenter - arrH1/2;
             xcenter + arrW2/2,       ycenter + arrH2/2;
             xcenter + arrW1/2,       ycenter          ;
-        ];
+            ];
     case 4 % right arrow
         arrowPoints = [
-            xcenter + arrH1/2,       ycenter          ; 
-            xcenter          ,       ycenter + arrW1/2; 
-            xcenter + arrH2/2,       ycenter + arrW2/2; 
+            xcenter + arrH1/2,       ycenter          ;
+            xcenter          ,       ycenter + arrW1/2;
+            xcenter + arrH2/2,       ycenter + arrW2/2;
             xcenter - arrH1/2,       ycenter + arrW2/2;
             xcenter - arrH1/2,       ycenter - arrW2/2;
             xcenter + arrH2/2,       ycenter - arrW2/2;
             xcenter          ,       ycenter - arrW1/2;
-        ];
+            ];
 end
 
 Screen('FillRect', window_ptr, WhiteIndex(window_ptr), squ);

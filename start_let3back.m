@@ -60,8 +60,8 @@ try
         trial_end = stim_offset + timing.iti;
         onset_timestamp = nan;
         offset_timestamp = nan;
-        
-        
+
+
         % now present stimuli and check user's response
         while ~early_exit
             [key_pressed, timestamp, key_code] = KbCheck(-1);

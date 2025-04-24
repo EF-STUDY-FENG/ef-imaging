@@ -1,5 +1,5 @@
 function [rec, status, exception] = start_stroop(run, start, rti, window_ptr, window_rect, prac)
-   
+
 % ---- configure exception ----
 status = 0;
 exception = [];
@@ -20,8 +20,8 @@ rec.resp = cell(height(config), 1);
 rec.rt = nan(height(config), 1);
 
 timing = struct(...
-    'iti', 0.5, ... 
-    'tdur', 2.5); 
+    'iti', 0.5, ...
+    'tdur', 2.5);
 
 imageFolder = 'stimuli/stroop_stimuli';
 
@@ -29,7 +29,7 @@ imageFolder = 'stimuli/stroop_stimuli';
 keys = struct(...
     'start', KbName('s'), ...
     'exit', KbName('Escape'), ...
-     'red', KbName('1!'), ...
+    'red', KbName('1!'), ...
     'yellow', KbName('2@'), ...
     'blue', KbName('3#'), ...
     'green', KbName('4$'));
@@ -93,7 +93,7 @@ try
                 [imgHeight, imgWidth, ~] = size(Image);
                 Rect = CenterRectOnPoint([0 0 imgWidth imgHeight], xcenter, ycenter);
                 Screen('DrawTexture', window_ptr, Texture, [], Rect);
-                 vbl = Screen('Flip', window_ptr);
+                vbl = Screen('Flip', window_ptr);
                 if isnan(onset_timestamp)
                     onset_timestamp = vbl;
                 end
@@ -123,7 +123,7 @@ try
         rec.rt(trial_order) = rt;
         rec.cort(trial_order) = score;
     end
-    
+
 catch exception
     status = -1;
 end

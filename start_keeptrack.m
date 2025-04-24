@@ -59,7 +59,7 @@ try
 
         % initialize responses
         corr = [];
-        resp_list = nan(p.level, 1); 
+        resp_list = nan(p.level, 1);
 
         % Generate numeric sequence
         positions = cell(1, p.level);
@@ -80,10 +80,10 @@ try
             % n = randi([1,3]);
             seq = randi([1 4], 1, n(i));
             positions{i} = seq;
-            % correctAnswer(i) = seq(end); 
+            % correctAnswer(i) = seq(end);
             for num = 1:n(i)
                 event.pos(end+1) = i;
-                event.digit(end+1) = positions{i}(num);                
+                event.digit(end+1) = positions{i}(num);
             end
         end
         randOrder = randperm(length(event.pos));
@@ -96,7 +96,7 @@ try
             % ---- configure stimuli ----
             xPos = linspace(screenWidth*0.3, screenWidth*0.7, p.level);
             yPos = ones(1, p.level) * ycenter;
-        
+
             for j = randOrder
                 [~, ~, key_code] = KbCheck(-1);
                 if key_code(keys.exit)
@@ -106,14 +106,14 @@ try
                 if early_exit
                     break
                 end
-                i = event.pos(j);     
-                digit = event.digit(j); 
+                i = event.pos(j);
+                digit = event.digit(j);
                 correctAnswer(i) = digit;
                 Screen('FillRect', window_ptr, 0);
                 underline(xPos, yPos, p.level, window_ptr); % draw underline
                 DrawFormattedText(window_ptr, num2str(event.digit(j)),...
-                        'center', 'center', WhiteIndex(window_ptr), [], [], [], [], [],...
-                        [xPos(event.pos(j))-50 yPos(event.pos(j))-50 xPos(event.pos(j))+50 yPos(event.pos(j))+50]);
+                    'center', 'center', WhiteIndex(window_ptr), [], [], [], [], [],...
+                    [xPos(event.pos(j))-50 yPos(event.pos(j))-50 xPos(event.pos(j))+50 yPos(event.pos(j))+50]);
                 Screen('Flip', window_ptr);
                 WaitSecs(timing.iti);
                 underline(xPos, yPos, p.level, window_ptr);
@@ -122,7 +122,7 @@ try
             end
             break
         end
-        while ~early_exit  
+        while ~early_exit
             timeout = false;
             for k = 1:p.level
                 if GetSecs - ans_onset >= this_trial(2)
@@ -174,7 +174,7 @@ try
             break
         end
     end
-        
+
 catch exception
     status = -1;
 end
@@ -182,94 +182,94 @@ end
 end
 
 function underline(xPos, yPos, level, window_ptr, places, resp_list)
-    
-    exampleNum = '0';
-    bounds = Screen('TextBounds', window_ptr, exampleNum);
-    textWidth = bounds(3);
-    textHeight = bounds(4);
-    underlinePadding = 5;  % Distance between underlines and digits
-    lineWidth = 5;         % Underlines thickness
-    underlinesSingle = zeros(level,4);
-    for i = 1:level
-        underlinesSingle(i,:) = [xPos(i)-textWidth/2, yPos(i)+textHeight/2+underlinePadding,...
-                                 xPos(i)+textWidth/2, yPos(i)+textHeight/2+underlinePadding];
-    end
 
-    if nargin > 4
-        for j = 1:places
-	        Screen('DrawLine', window_ptr, WhiteIndex(window_ptr),...
-                underlinesSingle(j,1), underlinesSingle(j,2),...
-                underlinesSingle(j,3), underlinesSingle(j,4),...
-                lineWidth);
-            DrawFormattedText(window_ptr, num2str(resp_list(j)),...
-                'center', 'center', WhiteIndex(window_ptr), [], [], [], [], [],...
-                [xPos(j)-50 yPos(j)-50 xPos(j)+50 yPos(j)+50]);
-        end
-    else
-        for j = 1:level
-            Screen('DrawLine', window_ptr, WhiteIndex(window_ptr),...
+exampleNum = '0';
+bounds = Screen('TextBounds', window_ptr, exampleNum);
+textWidth = bounds(3);
+textHeight = bounds(4);
+underlinePadding = 5;  % Distance between underlines and digits
+lineWidth = 5;         % Underlines thickness
+underlinesSingle = zeros(level,4);
+for i = 1:level
+    underlinesSingle(i,:) = [xPos(i)-textWidth/2, yPos(i)+textHeight/2+underlinePadding,...
+        xPos(i)+textWidth/2, yPos(i)+textHeight/2+underlinePadding];
+end
+
+if nargin > 4
+    for j = 1:places
+        Screen('DrawLine', window_ptr, WhiteIndex(window_ptr),...
             underlinesSingle(j,1), underlinesSingle(j,2),...
             underlinesSingle(j,3), underlinesSingle(j,4),...
             lineWidth);
-        end
+        DrawFormattedText(window_ptr, num2str(resp_list(j)),...
+            'center', 'center', WhiteIndex(window_ptr), [], [], [], [], [],...
+            [xPos(j)-50 yPos(j)-50 xPos(j)+50 yPos(j)+50]);
     end
-    
+else
+    for j = 1:level
+        Screen('DrawLine', window_ptr, WhiteIndex(window_ptr),...
+            underlinesSingle(j,1), underlinesSingle(j,2),...
+            underlinesSingle(j,3), underlinesSingle(j,4),...
+            lineWidth);
+    end
+end
+
 end
 
 function [keyCode,timed_out, window_ptr] = Flashing_U( ...
     xPos, yPos, ycenter, level, window_ptr, current, resp_list,remaining_time)
-    keys = struct( ...
+keys = struct( ...
     'exit', KbName('Escape'));
-    timed_out = false;
+timed_out = false;
 
-    exampleNum = '0';
-    bounds = Screen('TextBounds', window_ptr, exampleNum);
-    textWidth = bounds(3); 
-    textHeight = bounds(4);
-    underlinePadding = 5;
-    lineWidth = 5;
+exampleNum = '0';
+bounds = Screen('TextBounds', window_ptr, exampleNum);
+textWidth = bounds(3);
+textHeight = bounds(4);
+underlinePadding = 5;
+lineWidth = 5;
 
-    underlinesSingle = zeros(level, 4);
-    for i = 1:level
-        underlinesSingle(i, :) = [xPos(i)-textWidth/2, yPos(i)+textHeight/2+underlinePadding,...
-                                  xPos(i)+textWidth/2, yPos(i)+textHeight/2+underlinePadding];
+underlinesSingle = zeros(level, 4);
+for i = 1:level
+    underlinesSingle(i, :) = [xPos(i)-textWidth/2, yPos(i)+textHeight/2+underlinePadding,...
+        xPos(i)+textWidth/2, yPos(i)+textHeight/2+underlinePadding];
+end
+
+start_time = GetSecs;
+end_time = start_time + remaining_time;
+visibility = true;
+keyIsDown = false;
+early_exit = false;
+while ~keyIsDown && GetSecs < end_time && ~early_exit
+    [keyIsDown, ~, keyCode] = KbCheck;
+    if keyCode(keys.exit)
+        early_exit = true;
     end
 
-    start_time = GetSecs;
-    end_time = start_time + remaining_time; 
-    visibility = true;
-    keyIsDown = false;
-    early_exit = false;
-    while ~keyIsDown && GetSecs < end_time && ~early_exit
-        [keyIsDown, ~, keyCode] = KbCheck;
-        if keyCode(keys.exit)
-            early_exit = true;
-        end 
-
-        Screen('FillRect', window_ptr, BlackIndex(window_ptr));
-        instr_1 = sprintf('请输入位置 %d 的数字', current);
-        DrawFormattedText(window_ptr, double(instr_1),...
-            'center', ycenter-100, WhiteIndex(window_ptr));
-        % Draw currently blinking underline
-        if visibility
-            Screen('DrawLine', window_ptr, WhiteIndex(window_ptr),...
+    Screen('FillRect', window_ptr, BlackIndex(window_ptr));
+    instr_1 = sprintf('请输入位置 %d 的数字', current);
+    DrawFormattedText(window_ptr, double(instr_1),...
+        'center', ycenter-100, WhiteIndex(window_ptr));
+    % Draw currently blinking underline
+    if visibility
+        Screen('DrawLine', window_ptr, WhiteIndex(window_ptr),...
             underlinesSingle(current,1), underlinesSingle(current,2),...
             underlinesSingle(current,3), underlinesSingle(current,4), lineWidth);
-        end
-        if current > 1
-            underline(xPos, yPos, level, window_ptr, current-1, resp_list);  
-        end
-        Screen('Flip', window_ptr);
-        
-        % Blinking every 0.5s
-        if GetSecs - start_time >= 0.5
-            visibility = ~visibility;
-            start_time = GetSecs; % reset timer
-        end     
     end
+    if current > 1
+        underline(xPos, yPos, level, window_ptr, current-1, resp_list);
+    end
+    Screen('Flip', window_ptr);
 
-    if GetSecs >= end_time && ~keyIsDown
-        timed_out = true;
+    % Blinking every 0.5s
+    if GetSecs - start_time >= 0.5
+        visibility = ~visibility;
+        start_time = GetSecs; % reset timer
     end
-    KbReleaseWait
+end
+
+if GetSecs >= end_time && ~keyIsDown
+    timed_out = true;
+end
+KbReleaseWait
 end

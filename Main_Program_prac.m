@@ -41,7 +41,7 @@ keys = struct( ...
 % ---- seq config ---- %
 config = readtable(fullfile("config/main_program", 'seq.xlsx'));
 n = str2num(strjoin(config.run(run)));
-        
+
 %%
 early_exit = false;
 try
@@ -83,25 +83,25 @@ try
 
     % --- Main Program --- %
     funcSeq = {'numlet', 'let3back', 'stroop', 'antisac', 'colshp', ...
-           'spt2back', 'keeptrack', 'sizelife', 'stopsignal'};
-    
+        'spt2back', 'keeptrack', 'sizelife', 'stopsignal'};
+
     for idx = 1:length(n)
         taskonset_timestamp = instPlayed(funcSeq{n(idx)}, window_ptr);
         rti = taskonset_timestamp - start; % Run and Task Interval
         generalFunc(funcSeq{n(idx)}, run, start, rti, subconfig, window_ptr, window_rect, outFolderPath, 1);
     end
-    
+
     % ---- END Inst Display ---- %
-        endtime = GetSecs;
-        dur = endtime - start;
-        Screen('Flip', window_ptr);
-        DrawFormattedText(window_ptr, double('请闭眼等待'), 'center', 'center', WhiteIndex(window_ptr));
-        Screen('Flip', window_ptr);   % show stim, return flip time
-        WaitSecs(3);
+    endtime = GetSecs;
+    dur = endtime - start;
+    Screen('Flip', window_ptr);
+    DrawFormattedText(window_ptr, double('请闭眼等待'), 'center', 'center', WhiteIndex(window_ptr));
+    Screen('Flip', window_ptr);   % show stim, return flip time
+    WaitSecs(3);
 
 
 catch exception
-status = -1;
+    status = -1;
 end
 
 % --- post presentation jobs
@@ -123,47 +123,47 @@ end
 
 %% ---- Call Each Task Function ---- %%
 function generalFunc(taskName, run, start, rti, subconfig, window_ptr, window_rect, outFolderPath, prac)
-    funcName = ['start_', taskName];
-    func = str2func(funcName);
-    try
-        if strcmp(funcName, 'start_stopsignal')
-            % Handle stopsignal task
-            [rec, out_ssd] = func(run, start, rti, window_ptr, window_rect, [], prac);
-            ssd_run = sprintf('sub%s_outssd.mat', subconfig{1});
-            out_ssd_place = fullfile(outFolderPath, ssd_run);
-            save(out_ssd_place, "out_ssd");
-        else
-            % Call other tasks normally
-            rec = func(run, start, rti, window_ptr, window_rect);
-        end
-        save_task_data(funcName, rec, subconfig, outFolderPath);
-    catch ME
-        fprintf('%s function call failed: %s\n', funcName, ME.message);
+funcName = ['start_', taskName];
+func = str2func(funcName);
+try
+    if strcmp(funcName, 'start_stopsignal')
+        % Handle stopsignal task
+        [rec, out_ssd] = func(run, start, rti, window_ptr, window_rect, [], prac);
+        ssd_run = sprintf('sub%s_outssd.mat', subconfig{1});
+        out_ssd_place = fullfile(outFolderPath, ssd_run);
+        save(out_ssd_place, "out_ssd");
+    else
+        % Call other tasks normally
+        rec = func(run, start, rti, window_ptr, window_rect);
     end
+    save_task_data(funcName, rec, subconfig, outFolderPath);
+catch ME
+    fprintf('%s function call failed: %s\n', funcName, ME.message);
+end
 end
 
 %% ---- Save Data Function ---- %%
 function save_task_data(taskName, rec, subconfig, outFolderPath)
 
-    filename = sprintf('sub-%s_task-%s_prac_events.tsv',...
-        subconfig{1}, taskName);
+filename = sprintf('sub-%s_task-%s_prac_events.tsv',...
+    subconfig{1}, taskName);
 
-    writetable(rec, fullfile(outFolderPath, filename),...
-        'FileType', 'text',...
-        'Delimiter', '\t');
+writetable(rec, fullfile(outFolderPath, filename),...
+    'FileType', 'text',...
+    'Delimiter', '\t');
 end
 
 %% ---- Inst Played Function ---- %%
 function taskonset_timestamp = instPlayed(taskName, window_ptr)
-    
-    Inst = imread(sprintf('Instruction\\%s.jpg', taskName));  %%% instruction
-    tex=Screen('MakeTexture', window_ptr, Inst);
-    Screen('DrawTexture', window_ptr, tex);
-    Screen('Flip', window_ptr);   
-    WaitSecs(4.5);
-    vbl = Screen('Flip', window_ptr); % show inst, return flip time
-    if ~strcmp(taskName, 'spt2back')
-        WaitSecs(0.5);
-    end
-    taskonset_timestamp = vbl + 0.5;
+
+Inst = imread(sprintf('Instruction\\%s.jpg', taskName));  %%% instruction
+tex=Screen('MakeTexture', window_ptr, Inst);
+Screen('DrawTexture', window_ptr, tex);
+Screen('Flip', window_ptr);
+WaitSecs(4.5);
+vbl = Screen('Flip', window_ptr); % show inst, return flip time
+if ~strcmp(taskName, 'spt2back')
+    WaitSecs(0.5);
+end
+taskonset_timestamp = vbl + 0.5;
 end

@@ -57,8 +57,8 @@ try
     r = CenterRect([0 0 1 1]*p.sz, window_rect);
     circle = CenterRect([0 0 1 1]*p.sz*0.8, window_rect);
     triagl = [mean(r([1 3])) r(2)+p.sz*0.1;
-          r(1)+p.sz*0.1  r(4)-p.sz*0.1;
-          r(3)-p.sz*0.1  r(4)-p.sz*0.1];
+        r(1)+p.sz*0.1  r(4)-p.sz*0.1;
+        r(3)-p.sz*0.1  r(4)-p.sz*0.1];
 
     % main experiment
     for trial_order = 1:p.trial
@@ -66,7 +66,7 @@ try
             break
         end
         this_trial = rec(trial_order, :);
-        r = CenterRect([0 0 1 1]*p.sz, window_rect); 
+        r = CenterRect([0 0 1 1]*p.sz, window_rect);
 
         % initialize responses
         resp_made = false;
@@ -112,12 +112,12 @@ try
                 else
                     Screen('FramePoly', window_ptr, p.color(this_trial.color,:), triagl, 4);
                 end
-                
+
                 if isnan(onset_timestamp)
                     onset_timestamp = vbl;
                 end
-                
-            end       
+
+            end
         end
         % analyze user's response
         if ~resp_made

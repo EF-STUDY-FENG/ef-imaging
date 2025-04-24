@@ -40,7 +40,7 @@ try
     [x, y] = meshgrid((0:4) * p.squareSize * 2);
     x = x + window_rect(3)/2 + rand(5)*p.squareSize - p.squareSize*5;
     y = y + window_rect(4)/2 + rand(5)*p.squareSize - p.squareSize*5;
-    
+
     % get inter flip interval
     ifi = Screen('GetFlipInterval', window_ptr);
 
@@ -62,7 +62,7 @@ try
             loc(i) = loc(i-p.nback);
         else
             while any(loc(i) == loc(i-[1 p.nback]))
-            loc(i) = randsample(p.nSquare, 1);
+                loc(i) = randsample(p.nSquare, 1);
             end
         end
     end
@@ -95,7 +95,7 @@ try
         end
 
         this_trial = config(trial_order, :);
-        
+
 
         % initialize responses
         resp_made = false;
@@ -122,8 +122,8 @@ try
                 resp_made = true;
             end
             if timestamp > trial_end - 0.5 * ifi
-                    % remaining time is not enough for a new flip
-                    break
+                % remaining time is not enough for a new flip
+                break
             end
             if timestamp < stim_onset || timestamp >= stim_offset
                 Screen('FrameRect', window_ptr, 255, rects, 3);
@@ -162,7 +162,7 @@ try
         rec.rt(trial_order) = rt;
         rec.cort(trial_order) = score;
     end
-    
+
 catch exception
     status = -1;
 end
