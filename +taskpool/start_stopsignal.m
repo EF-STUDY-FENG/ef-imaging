@@ -20,7 +20,7 @@ rec.resp = cell(height(config), 1);
 rec.rt = nan(height(config), 1);
 rec.acc = nan(height(config), 1);
 out_ssd = [];
-if ~(nargin == 6)
+if isempty(init_ssd)
     init_ssd = [0.2, 0.6];
 end
 last_ssd = [nan, nan];
