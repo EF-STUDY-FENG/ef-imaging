@@ -10,7 +10,7 @@ else
     % For the first run, all parameters are set to empty by default
     definput = {'', ''};
 end
-subconfig = inputdlg(prompt,dlgtitle,num_lines, definput);
+subconfig = inputdlg(prompt,dlgtitle, num_lines, definput);
 
 % If it is the first run, save the first three parameters to the base workspace
 if ~evalin('base', 'exist(''savedParams'', ''var'')')
@@ -141,7 +141,7 @@ try
         if run == 1
             [rec, out_ssd] = taskpool.start_stopsignal(run, start, rti, window_ptr, window_rect, []);
             % save ssd to next run
-            out_ssd_folder = sprintf('stimuli/%s_ssd/Sub%s', taskName, subconfig{1});
+            out_ssd_folder = sprintf('Results/%s_ssd/Sub%s', taskName, subconfig{1});
             if ~exist(out_ssd_folder, 'dir')
                 mkdir(fullfile(pwd, out_ssd_folder));
             end
@@ -149,18 +149,18 @@ try
             out_ssd_place = fullfile(out_ssd_folder, ssd_run);
             save(out_ssd_place, "out_ssd");
         else
-            init_ssd_place = sprintf('stimuli/%s_ssd/Sub%s/run%d.mat',taskName, subconfig{1}, run-1);
+            init_ssd_place = sprintf('Results/%s_ssd/Sub%s/run%d.mat',taskName, subconfig{1}, run-1);
             load(init_ssd_place, "out_ssd"); % load the previous saved ssd
             init_ssd = out_ssd;
             [rec, out_ssd] = taskpool.start_stopsignal(run, start, rti, window_ptr, window_rect, init_ssd);
-            out_ssd_place = sprintf('stimuli/%s_ssd/Sub%s/run%d.mat',taskName, subconfig{1}, run);
+            out_ssd_place = sprintf('Results/%s_ssd/Sub%s/run%d.mat',taskName, subconfig{1}, run);
             save(out_ssd_place, "out_ssd");
         end
     else
         % Call other tasks normally
         rec = taskpool.(funcName)(run, start, rti, window_ptr, window_rect);
     end
-    save_task_data(funcName, rec, subconfig, outFolderPath);
+    save_task_data(taskName, rec, subconfig, outFolderPath);
 catch ME
     fprintf('%s function call failed: %s\n', funcName, ME.message);
 end

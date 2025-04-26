@@ -14,7 +14,6 @@ end
 % % ---- configure exception ----
 status = 0;
 exception = [];
-% subconfig{2} = 1;
 run = 1;
 
 % ---- configure screen and window ----

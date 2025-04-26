@@ -11,20 +11,21 @@ else
     TaskFile = sprintf('stopsignal_run%d.xlsx', run);
     config = readtable(fullfile("config/stopsignal", TaskFile));
 end
+config.onset = config.onset + rti;
 rec = config;
-rec.onset = (rti:1.5:rti+1.5*(height(config)-1))';
 rec.onset_real = nan(height(config), 1);
+rec.trialend_real = nan(height(config), 1);
 rec.ssd = nan(height(config), 1);
 rec.resp_raw = cell(height(config), 1);
 rec.resp = cell(height(config), 1);
 rec.rt = nan(height(config), 1);
-rec.acc = nan(height(config), 1);
-out_ssd = [];
+rec.cort = nan(height(config), 1);
 if isempty(init_ssd)
     init_ssd = [0.2, 0.6];
 end
 last_ssd = [nan, nan];
 last_stop = [nan, nan];
+out_ssd = [nan, nan];
 timing = struct( ...
     'iti', 0.5, ... % inter-trial-interval
     'tdur', 1); % trial duration
@@ -66,7 +67,7 @@ try
         if early_exit
             break
         end
-        this_trial = rec(trial_order, :);
+        this_trial = config(trial_order, :);
 
         % ssd calculation
         if this_trial.type{:} == "go"
@@ -86,7 +87,6 @@ try
             end
             last_ssd(ssd_idx) = ssd;
             out_ssd(ssd_idx) = ssd;
-
         end
 
         % initialize responses
@@ -121,6 +121,7 @@ try
                 resp_made = true;
             end
             if timestamp > trial_end - 0.5 * ifi
+                trialend_timestamp = timestamp;
                 % remaining time is not enough for a new flip
                 break
             end
@@ -166,10 +167,10 @@ try
             resp = '';
             rt = 0;
             if this_trial.type{:} ~= "go"
-                acc = 1;
+                score = 1;
                 last_stop(ssd_idx) = 1;
             else
-                acc = -1;
+                score = -1;
             end
         else
             resp_raw = string(strjoin(cellstr(KbName(resp_code)), '|'));
@@ -183,22 +184,24 @@ try
             end
             rt = resp_timestamp - onset_timestamp;
             if this_trial.type{:} == "go"
-                acc = double(strcmp(this_trial.orient{:}, resp));
+                score = double(strcmp(this_trial.orient{:}, resp));
             else
-                acc = 0;
+                score = 0;
                 last_stop(ssd_idx) = 0;
             end
         end
         rec.onset_real(trial_order) = onset_timestamp - start;
+        rec.trialend_real(trial_order) = trialend_timestamp - start;
         rec.ssd(trial_order) = ssd;
         rec.resp_raw{trial_order} = resp_raw;
         rec.resp{trial_order} = resp;
         rec.rt(trial_order) = rt;
-        rec.acc(trial_order) = acc;
+        rec.cort(trial_order) = score;
     end
 
 catch exception
     status = -1;
+    fprintf('function call failed: %s\n', exception.message);
 end
 
 end
