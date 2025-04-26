@@ -1,41 +1,28 @@
-function [rec, status, exception] = start_colshp(~, start, rti, window_ptr, window_rect, prac)
+function [rec, status, exception] = start_colshp(run, start, rti, window_ptr, window_rect, prac)
 
 % ---- configure exception ----
 status = 0;
 exception = [];
-% accu = 0.00;
 
 % ---- configure sequence ----
 if nargin > 5 && prac == 1
-    p.trial = 10;
+    config = readtable(fullfile("config_prac", "colshp_prac.xlsx"));
 else
-    p.trial = 20;
+    TaskFile = sprintf('colshp_run%d.xlsx', run);
+    config = readtable(fullfile("config/colshp", TaskFile));
 end
-valid_names = {'Left', 'Right'};
-rec = table();
-rec.Trial = (1:p.trial)';
-rec.shape = randi([1,2], p.trial, 1);
-rec.color = randi([1,2], p.trial, 1);
-rec.task = randi([1,2], p.trial, 1);
-rec.cresp = cell(p.trial, 1);
-for i = 1:p.trial
-    if rec.task(i) == 1
-        rec.cresp(i) = valid_names(rec.shape(i));
-    else
-        rec.cresp(i) = valid_names(rec.color(i));
-    end
-end
-rec.onset = (rti:3:rti+3*(p.trial-1))';
-config = rec;
-rec.onset_real = nan(p.trial, 1);
-rec.trialend_real = nan(p.trial, 1);
-rec.resp_raw = cell(p.trial, 1);
-rec.resp = cell(p.trial, 1);
-rec.rt = nan(p.trial, 1);
-rec.cort = nan(p.trial,1);
+config.onset = config.onset + rti;
+rec = config;
+rec.onset_real = nan(height(config), 1);
+rec.trialend_real = nan(height(config), 1);
+rec.resp_raw = cell(height(config), 1);
+rec.resp = cell(height(config), 1);
+rec.rt = nan(height(config), 1);
+rec.cort = nan(height(config),1);
 timing = struct( ...
     'iti', 0.5, ... % inter-trial-interval
     'tdur', 2.5); % trial duration
+
 p.color = [1 0 0; 0 1 0] * 255; % red / green
 p.sz = 200; %size
 cuetxt = {'XZ'; 'YS'}; %'XZ':shape task,'YS':color task
@@ -63,7 +50,7 @@ try
         r(3)-p.sz*0.1  r(4)-p.sz*0.1];
 
     % main experiment
-    for trial_order = 1:p.trial
+    for trial_order = 1:height(config)
         if early_exit
             break
         end
@@ -149,6 +136,7 @@ try
 
 catch exception
     status = -1;
+    fprintf('function call failed: %s\n', exception.message);
 end
 
 end

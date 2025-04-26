@@ -5,27 +5,27 @@ status = 0;
 exception = [];
 
 % ---- configure sequence ----
-p.maxTri = 4;
-p.level = 3;
+% p.maxTri = 4;
+% level = 3;
 % Errors = 0;
-config = readtable(fullfile("config/keeptrack", 'keeptrack.xlsx'));
+
+if nargin > 5 && prac == 1
+    config = readtable(fullfile("config_prac", "keeptrack_prac.xlsx"));
+else
+    TaskFile = sprintf('keeptrack_run%d.xlsx', run);
+    config = readtable(fullfile("config/keeptrack", TaskFile));
+end
 config.onset = config.onset + rti;
 config.ans_onset = config.ans_onset + rti;
 config.trial_end = config.trial_end + rti;
-rec = config(:, 1:5);
-
-if nargin > 5 && prac == 1
-    rec.run(1:4) = eval(sprintf('config.prac(1:4)'));
-else
-    rec.run(1:4) = eval(sprintf('config.run%d(1:4)',run));
-end
-rec.cresp = cell(height(rec), 1);
-rec.onset_real = nan(height(rec), 1);
-rec.ansOnset_real = nan(height(rec), 1);
-rec.trialend_real = nan(height(rec), 1);
-rec.resp = cell(height(rec), 1);
-rec.rt = cell(height(rec), 1);
-rec.cort = cell(p.maxTri, 1);
+rec = config;
+rec.cresp = cell(height(config), 1);
+rec.onset_real = nan(height(config), 1);
+rec.ansOnset_real = nan(height(config), 1);
+rec.trialend_real = nan(height(config), 1);
+rec.resp = cell(height(config), 1);
+rec.rt = cell(height(config), 1);
+rec.cort = cell(height(config), 1);
 timing = struct( ...
     'tdur', 1.5); % trial duration
 
@@ -48,19 +48,20 @@ try
     screenWidth = window_rect(3);
 
     % main experiment
-    for trial = 1:p.maxTri
+    for trial = 1:height(config)
         if early_exit
             break
         end
 
+        level = config.level(trial);
         this_trial = zeros(1, 2);
         this_trial(1) = config.onset(trial);
         this_trial(2) = config.ans_time(trial);
-        eachnum_onset = (start+this_trial(1):timing.tdur:start+this_trial(1)+(p.level*3));
-        eachblank_onset = (start+this_trial(1)+1:timing.tdur:start+this_trial(1)+(p.level*3-1.5)+1);
+        eachnum_onset = (start+this_trial(1):timing.tdur:start+this_trial(1)+(level*3));
+        eachblank_onset = (start+this_trial(1)+1:timing.tdur:start+this_trial(1)+(level*3-1.5)+1);
 
         % initialize stimulus timestamps
-        ans_onset = start + this_trial(1) + p.level*3;
+        ans_onset = start + this_trial(1) + level*3;
         trial_end = ans_onset + this_trial(2);
         onset_timestamp = nan;
         trialend_timestamp = nan;
@@ -68,13 +69,13 @@ try
 
 
         % initialize responses
-        corr = zeros(1, p.level);
-        resp_list = zeros(1, p.level);
-        resp_rt = zeros(1, p.level);
+        corr = zeros(1, level);
+        resp_list = zeros(1, level);
+        resp_rt = zeros(1, level);
 
         % Generate numeric sequence
-        positions = cell(1, p.level);
-        correctAnswer = zeros(1, p.level);
+        positions = cell(1, level);
+        correctAnswer = zeros(1, level);
 
         event.pos = nan(0,1);
         event.digit = nan(0,1);
@@ -82,12 +83,12 @@ try
         n=[];
         for i = 1:4
             for j = 1:4
-                if rec.level(j) == p.level
+                if rec.level(j) == level
                     n = str2num(strjoin(rec.run(j)));
                 end
             end
         end
-        for i = 1:p.level
+        for i = 1:level
             seq = randi([1 4], 1, n(i));
             positions{i} = seq;
             for num = 1:n(i)
@@ -104,8 +105,8 @@ try
                 early_exit = true;
             end
             % ---- configure stimuli ----
-            xPos = linspace(screenWidth*0.3, screenWidth*0.7, p.level);
-            yPos = ones(1, p.level) * ycenter;
+            xPos = linspace(screenWidth*0.3, screenWidth*0.7, level);
+            yPos = ones(1, level) * ycenter;
 
             k = 1;
             for j = randOrder
@@ -121,7 +122,7 @@ try
                 digit = event.digit(j);
                 correctAnswer(i) = digit;
                 Screen('FillRect', window_ptr, 0);
-                underline(xPos, yPos, p.level, window_ptr); % draw underline
+                underline(xPos, yPos, level, window_ptr); % draw underline
                 DrawFormattedText(window_ptr, num2str(event.digit(j)),...
                     'center', 'center', WhiteIndex(window_ptr), [], [], [], [], [],...
                     [xPos(event.pos(j))-50 yPos(event.pos(j))-50 xPos(event.pos(j))+50 yPos(event.pos(j))+50]);
@@ -129,11 +130,11 @@ try
                 if isnan(onset_timestamp)
                     onset_timestamp = vbl;
                 end
-                underline(xPos, yPos, p.level, window_ptr);
+                underline(xPos, yPos, level, window_ptr);
                 Screen('Flip', window_ptr, eachblank_onset(k));
                 k = k + 1;
             end
-            underline(xPos, yPos, p.level, window_ptr);
+            underline(xPos, yPos, level, window_ptr);
             Screen('Flip', window_ptr, eachnum_onset(k));
             break
         end
@@ -142,14 +143,14 @@ try
         while ~early_exit
             timeout = false;
             resp_timestamp = nan;
-            for k = 1:p.level
+            for k = 1:level
                 if GetSecs - ans_onset >= this_trial(2)
                     timeout = true;
                     break;
                 end
                 remaining_time = this_trial(2) - (GetSecs - ans_onset);
                 [resp_code, timed_out, rt, ansOnset_real, resp_timestamp, window_ptr] = Flashing_U( ...
-                    xPos, yPos, ycenter, p.level, ansOnset_real, resp_timestamp, window_ptr, k, resp_list, remaining_time);
+                    xPos, yPos, ycenter, level, ansOnset_real, resp_timestamp, window_ptr, k, resp_list, remaining_time);
                 if any(resp_code(keys.exit))
                     early_exit = true;
                     timeout = true;
@@ -170,7 +171,7 @@ try
                     corr(k) = double(resp == correctAnswer(k));
                     resp_list(k) = resp;
                 end
-                underline(xPos, yPos, p.level, window_ptr, k, resp_list)
+                underline(xPos, yPos, level, window_ptr, k, resp_list)
             end
             if timeout
                 corr(resp_rt == 0) = -1;
@@ -195,7 +196,6 @@ try
             rec.trialend_real(trial) = trialend_timestamp - start;
             rec.rt(trial) = cellstr(strjoin(arrayfun(@num2str, resp_rt, 'UniformOutput', false), ','));
             rec.cort(trial) = cellstr(strjoin(arrayfun(@num2str, score, 'UniformOutput', false), ','));
-            p.level = p.level + 1;
             break
         end
     end

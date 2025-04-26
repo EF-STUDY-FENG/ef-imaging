@@ -129,6 +129,7 @@ try
 
 catch exception
     status = -1;
+    fprintf('function call failed: %s\n', exception.message);
 end
 
 end
