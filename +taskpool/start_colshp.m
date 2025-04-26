@@ -26,7 +26,9 @@ for i = 1:p.trial
     end
 end
 rec.onset = (rti:3:rti+3*(p.trial-1))';
+config = rec;
 rec.onset_real = nan(p.trial, 1);
+rec.trialend_real = nan(p.trial, 1);
 rec.resp_raw = cell(p.trial, 1);
 rec.resp = cell(p.trial, 1);
 rec.rt = nan(p.trial, 1);
@@ -65,8 +67,7 @@ try
         if early_exit
             break
         end
-        this_trial = rec(trial_order, :);
-        r = CenterRect([0 0 1 1]*p.sz, window_rect);
+        this_trial = config(trial_order, :);
 
         % initialize responses
         resp_made = false;
@@ -94,6 +95,7 @@ try
                 resp_made = true;
             end
             if timestamp > trial_end - 0.5 * ifi
+                trialend_timestamp = timestamp;
                 % remaining time is not enough for a new flip
                 break
             end
@@ -124,6 +126,7 @@ try
             resp_raw = '';
             resp = '';
             rt = 0;
+            score = -1;
         else
             resp_raw = string(strjoin(cellstr(KbName(resp_code)), '|'));
             valid_names = {'Left', 'Right'};
@@ -134,9 +137,10 @@ try
                 resp = valid_names{valid_codes == find(resp_code)};
             end
             rt = resp_timestamp - onset_timestamp;
+            score = strcmp(rec.cresp(trial_order), resp);
         end
-        score = strcmp(rec.cresp(trial_order), resp);
         rec.onset_real(trial_order) = onset_timestamp - start;
+        rec.trialend_real(trial_order) = trialend_timestamp - start;
         rec.resp_raw{trial_order} = resp_raw;
         rec.resp{trial_order} = resp;
         rec.rt(trial_order) = rt;

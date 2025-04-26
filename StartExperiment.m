@@ -160,7 +160,7 @@ try
         % Call other tasks normally
         rec = taskpool.(funcName)(run, start, rti, window_ptr, window_rect);
     end
-    save_task_data(funcName, rec, subconfig, outFolderPath);
+    save_task_data(taskName, rec, subconfig, outFolderPath);
 catch ME
     fprintf('%s function call failed: %s\n', funcName, ME.message);
 end

@@ -14,6 +14,7 @@ end
 config.onset = config.onset + rti;
 rec = config;
 rec.onset_real = nan(height(config), 1);
+rec.trialend_real = nan(height(config), 1);
 rec.resp_raw = cell(height(config), 1);
 rec.resp = cell(height(config), 1);
 rec.rt = nan(height(config), 1);
@@ -78,6 +79,7 @@ try
                 resp_made = true;
             end
             if timestamp > trial_end - 0.5 * ifi
+                trialend_timestamp = timestamp;
                 % remaining time is not enough for a new flip
                 break
             end
@@ -112,6 +114,7 @@ try
             resp_raw = '';
             resp = '';
             rt = 0;
+            score = -1;
         else
             resp_raw = string(strjoin(cellstr(KbName(resp_code)), '|'));
             valid_names = {'left', 'right'};
@@ -122,9 +125,10 @@ try
                 resp = valid_names{valid_codes == find(resp_code)};
             end
             rt = resp_timestamp - onset_timestamp;
+            score = strcmp(rec.cresp(trial_order), resp);
         end
-        score = strcmp(rec.cresp(trial_order), resp);
         rec.onset_real(trial_order) = onset_timestamp - start;
+        rec.trialend_real(trial_order) = trialend_timestamp - start;
         rec.resp_raw{trial_order} = resp_raw;
         rec.resp{trial_order} = resp;
         rec.rt(trial_order) = rt;

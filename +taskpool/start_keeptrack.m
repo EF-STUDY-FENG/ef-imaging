@@ -10,19 +10,24 @@ p.level = 3;
 % Errors = 0;
 config = readtable(fullfile("config/keeptrack", 'keeptrack.xlsx'));
 config.onset = config.onset + rti;
-rec = table();
-rec.level(1:4) = config.level(1:4);
-rec.offset_real = nan(height(rec), 1);
+config.ans_onset = config.ans_onset + rti;
+config.trial_end = config.trial_end + rti;
+rec = config(:, 1:5);
 
 if nargin > 5 && prac == 1
     rec.run(1:4) = eval(sprintf('config.prac(1:4)'));
 else
     rec.run(1:4) = eval(sprintf('config.run%d(1:4)',run));
 end
-rec.score = nan(p.maxTri, 1);
+rec.cresp = cell(height(rec), 1);
+rec.onset_real = nan(height(rec), 1);
+rec.ansOnset_real = nan(height(rec), 1);
+rec.trialend_real = nan(height(rec), 1);
+rec.resp = cell(height(rec), 1);
+rec.rt = cell(height(rec), 1);
+rec.cort = cell(p.maxTri, 1);
 timing = struct( ...
-    'iti', 1.0, ... % inter-trial-interval
-    'tdur', 0.5); % trial duration
+    'tdur', 1.5); % trial duration
 
 % ---- keyboard settings ----
 keys = struct( ...
@@ -51,15 +56,21 @@ try
         this_trial = zeros(1, 2);
         this_trial(1) = config.onset(trial);
         this_trial(2) = config.ans_time(trial);
+        eachnum_onset = (start+this_trial(1):timing.tdur:start+this_trial(1)+(p.level*3));
+        eachblank_onset = (start+this_trial(1)+1:timing.tdur:start+this_trial(1)+(p.level*3-1.5)+1);
 
         % initialize stimulus timestamps
         ans_onset = start + this_trial(1) + p.level*3;
         trial_end = ans_onset + this_trial(2);
         onset_timestamp = nan;
+        trialend_timestamp = nan;
+        ansOnset_real = nan;
+
 
         % initialize responses
-        corr = [];
-        resp_list = nan(p.level, 1);
+        corr = zeros(1, p.level);
+        resp_list = zeros(1, p.level);
+        resp_rt = zeros(1, p.level);
 
         % Generate numeric sequence
         positions = cell(1, p.level);
@@ -77,16 +88,15 @@ try
             end
         end
         for i = 1:p.level
-            % n = randi([1,3]);
             seq = randi([1 4], 1, n(i));
             positions{i} = seq;
-            % correctAnswer(i) = seq(end);
             for num = 1:n(i)
                 event.pos(end+1) = i;
                 event.digit(end+1) = positions{i}(num);
             end
         end
         randOrder = randperm(length(event.pos));
+
         % now present stimuli and check user's response
         while ~early_exit
             [~, ~, key_code] = KbCheck(-1);
@@ -97,6 +107,7 @@ try
             xPos = linspace(screenWidth*0.3, screenWidth*0.7, p.level);
             yPos = ones(1, p.level) * ycenter;
 
+            k = 1;
             for j = randOrder
                 [~, ~, key_code] = KbCheck(-1);
                 if key_code(keys.exit)
@@ -114,24 +125,31 @@ try
                 DrawFormattedText(window_ptr, num2str(event.digit(j)),...
                     'center', 'center', WhiteIndex(window_ptr), [], [], [], [], [],...
                     [xPos(event.pos(j))-50 yPos(event.pos(j))-50 xPos(event.pos(j))+50 yPos(event.pos(j))+50]);
-                Screen('Flip', window_ptr);
-                WaitSecs(timing.iti);
+                vbl = Screen('Flip', window_ptr, eachnum_onset(k));
+                if isnan(onset_timestamp)
+                    onset_timestamp = vbl;
+                end
                 underline(xPos, yPos, p.level, window_ptr);
-                Screen('Flip', window_ptr);
-                WaitSecs(timing.tdur);
+                Screen('Flip', window_ptr, eachblank_onset(k));
+                k = k + 1;
             end
+            underline(xPos, yPos, p.level, window_ptr);
+            Screen('Flip', window_ptr, eachnum_onset(k));
             break
         end
+        % save answer on rec
+        rec.cresp(trial) = cellstr(strjoin(arrayfun(@num2str, correctAnswer, 'UniformOutput', false), ',')); 
         while ~early_exit
             timeout = false;
+            resp_timestamp = nan;
             for k = 1:p.level
                 if GetSecs - ans_onset >= this_trial(2)
                     timeout = true;
                     break;
                 end
                 remaining_time = this_trial(2) - (GetSecs - ans_onset);
-                [resp_code,timed_out, window_ptr] = Flashing_U( ...
-                    xPos, yPos, ycenter, p.level, window_ptr, k, resp_list, remaining_time);
+                [resp_code, timed_out, rt, ansOnset_real, resp_timestamp, window_ptr] = Flashing_U( ...
+                    xPos, yPos, ycenter, p.level, ansOnset_real, resp_timestamp, window_ptr, k, resp_list, remaining_time);
                 if any(resp_code(keys.exit))
                     early_exit = true;
                     timeout = true;
@@ -147,29 +165,36 @@ try
                     % pressed more than one key or invalid key
                     % resp = 'invalid';
                 else
+                    resp_rt(k) = round(rt*1000); % record as ms
                     resp = valid_names(valid_codes == find(resp_code));
-                    % resp1 = [resp1, resp];
-                    corr = [corr, double(resp == correctAnswer(k))];
+                    corr(k) = double(resp == correctAnswer(k));
                     resp_list(k) = resp;
                 end
                 underline(xPos, yPos, p.level, window_ptr, k, resp_list)
-
             end
             if timeout
-                rec.score(trial) = 0;
+                corr(resp_rt == 0) = -1;
+                score = corr;
+                % rec.cort(trial) = -1;
+                % rt = config.ans_time(trial);
             else
-                score = all(corr ~= 0);
-                rec.score(trial) = score;
+                score = corr;
+                % rec.score(trial) = score;
             end
             vbl = Screen('Flip', window_ptr);
             if vbl < trial_end
                 WaitSecs(trial_end - vbl);
             end
             vbl = Screen('Flip', window_ptr);
-            if isnan(onset_timestamp)
-                onset_timestamp = vbl;
+            if isnan(trialend_timestamp)
+                trialend_timestamp = vbl;
             end
-            rec.offset_real(trial) = onset_timestamp - start;
+            rec.resp(trial) = cellstr(strjoin(arrayfun(@num2str, resp_list, 'UniformOutput', false), ','));
+            rec.onset_real(trial) = onset_timestamp - start;
+            rec.ansOnset_real(trial) = ansOnset_real - start;
+            rec.trialend_real(trial) = trialend_timestamp - start;
+            rec.rt(trial) = cellstr(strjoin(arrayfun(@num2str, resp_rt, 'UniformOutput', false), ','));
+            rec.cort(trial) = cellstr(strjoin(arrayfun(@num2str, score, 'UniformOutput', false), ','));
             p.level = p.level + 1;
             break
         end
@@ -177,6 +202,7 @@ try
 
 catch exception
     status = -1;
+    fprintf('function call failed: %s\n', exception.message);
 end
 
 end
@@ -216,11 +242,14 @@ end
 
 end
 
-function [keyCode,timed_out, window_ptr] = Flashing_U( ...
-    xPos, yPos, ycenter, level, window_ptr, current, resp_list,remaining_time)
+function [keyCode, timed_out, rt, ansOnset_timestamp, resp_timestamp, window_ptr] = Flashing_U( ...
+    xPos, yPos, ycenter, level, ansOnset_timestamp, resp_timestamp, window_ptr, current, resp_list, remaining_time)
 keys = struct( ...
     'exit', KbName('Escape'));
 timed_out = false;
+% ansOnset_timestamp = nan;
+rt = nan;
+keyCode = nan;
 
 exampleNum = '0';
 bounds = Screen('TextBounds', window_ptr, exampleNum);
@@ -240,8 +269,9 @@ end_time = start_time + remaining_time;
 visibility = true;
 keyIsDown = false;
 early_exit = false;
+keyPressTime = nan;
 while ~keyIsDown && GetSecs < end_time && ~early_exit
-    [keyIsDown, ~, keyCode] = KbCheck;
+    [keyIsDown, timestamp, keyCode] = KbCheck;
     if keyCode(keys.exit)
         early_exit = true;
     end
@@ -259,17 +289,37 @@ while ~keyIsDown && GetSecs < end_time && ~early_exit
     if current > 1
         underline(xPos, yPos, level, window_ptr, current-1, resp_list);
     end
-    Screen('Flip', window_ptr);
+    vbl = Screen('Flip', window_ptr);
+    if isnan(ansOnset_timestamp)
+        ansOnset_timestamp = vbl;
+    end
 
     % Blinking every 0.5s
     if GetSecs - start_time >= 0.5
         visibility = ~visibility;
         start_time = GetSecs; % reset timer
     end
+
+    if keyIsDown
+        keyPressTime = timestamp; % 保存精确的按键时间
+        break;
+    end
 end
 
 if GetSecs >= end_time && ~keyIsDown
     timed_out = true;
+end
+
+if ~isnan(keyPressTime)
+    if current == 1
+        rt = keyPressTime - ansOnset_timestamp;
+        resp_timestamp = keyPressTime;
+    else
+        rt = keyPressTime - resp_timestamp;
+        resp_timestamp = keyPressTime;
+    end
+elseif timed_out
+    rt = end_time - ansOnset_timestamp;
 end
 KbReleaseWait
 end

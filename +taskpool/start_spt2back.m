@@ -76,6 +76,7 @@ try
         end
     end
     rec.onset_real = nan(p.nTrial, 1);
+    rec.trialend_real = nan(p.nTrial, 1);
     rec.resp = cell(p.nTrial, 1);
     rec.rt = nan(p.nTrial, 1);
     rec.cort = nan(p.nTrial, 1);
@@ -122,6 +123,7 @@ try
                 resp_made = true;
             end
             if timestamp > trial_end - 0.5 * ifi
+                trialend_timestamp = timestamp;
                 % remaining time is not enough for a new flip
                 break
             end
@@ -146,6 +148,11 @@ try
             % resp_raw = '';
             resp = '';
             rt = 0;
+            if trial_order > 2
+                score = -1;
+            else
+                score = 0;
+            end
         else
             valid_names = {'Y', 'N'};
             valid_codes = cellfun(@(x) keys.(x), valid_names);
@@ -155,9 +162,10 @@ try
                 resp = valid_names{valid_codes == find(resp_code)};
             end
             rt = resp_timestamp - onset_timestamp;
+            score = strcmp(rec.cresp(trial_order), resp);
         end
-        score = strcmp(rec.cresp(trial_order), resp);
         rec.onset_real(trial_order) = onset_timestamp - start;
+        rec.trialend_real(trial_order) = trialend_timestamp - start;
         rec.resp{trial_order} = resp;
         rec.rt(trial_order) = rt;
         rec.cort(trial_order) = score;
