@@ -18,7 +18,7 @@ else
     TaskFile = sprintf('spt2back_run%d.xlsx', run);
     config = readtable(fullfile("config/spt2back", TaskFile));
 end
-config.onset = config.onset + rti +0.5;
+config.onset = config.onset + rti + 0.5;
 rec = config;
 rec.onset_real = nan(height(config), 1);
 rec.trialend_real = nan(height(config), 1);

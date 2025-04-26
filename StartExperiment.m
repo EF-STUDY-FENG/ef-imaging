@@ -10,7 +10,7 @@ else
     % For the first run, all parameters are set to empty by default
     definput = {'', ''};
 end
-subconfig = inputdlg(prompt,dlgtitle,num_lines, definput);
+subconfig = inputdlg(prompt,dlgtitle, num_lines, definput);
 
 % If it is the first run, save the first three parameters to the base workspace
 if ~evalin('base', 'exist(''savedParams'', ''var'')')
@@ -96,7 +96,7 @@ try
     funcSeq = {'numlet', 'let3back', 'stroop', 'antisac', 'colshp', ...
         'spt2back', 'keeptrack', 'sizelife', 'stopsignal'};
     run_start = 0;
-    for idx = 8%1:length(n)
+    for idx = 1:length(n)
         [run_start, taskonset_timestamp] = instPlayed(funcSeq{n(idx)}, start_timestamp, window_ptr, run_start);
         rti = taskonset_timestamp - start_timestamp; % Run and Task Interval
         generalFunc(funcSeq{n(idx)}, run, start_timestamp, rti, subconfig, window_ptr, window_rect, outFolderPath);
