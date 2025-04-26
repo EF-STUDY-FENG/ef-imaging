@@ -20,12 +20,12 @@ rec.resp_raw = cell(height(config), 1);
 rec.resp = cell(height(config), 1);
 rec.rt = nan(height(config), 1);
 rec.cort = nan(height(config), 1);
-out_ssd = [];
 if isempty(init_ssd)
     init_ssd = [0.2, 0.6];
 end
 last_ssd = [nan, nan];
 last_stop = [nan, nan];
+out_ssd = [nan, nan];
 timing = struct( ...
     'iti', 0.5, ... % inter-trial-interval
     'tdur', 1); % trial duration
@@ -87,7 +87,6 @@ try
             end
             last_ssd(ssd_idx) = ssd;
             out_ssd(ssd_idx) = ssd;
-
         end
 
         % initialize responses
