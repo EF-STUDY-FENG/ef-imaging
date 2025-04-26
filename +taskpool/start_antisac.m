@@ -3,7 +3,6 @@ function [rec, status, exception] = start_antisac(run, start, rti, window_ptr, w
 % ---- configure exception ----
 status = 0;
 exception = [];
-% accu = 0.00;
 
 % ---- configure sequence ----
 if nargin > 5 && prac == 1

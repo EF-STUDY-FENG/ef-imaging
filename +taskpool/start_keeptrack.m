@@ -5,10 +5,6 @@ status = 0;
 exception = [];
 
 % ---- configure sequence ----
-% p.maxTri = 4;
-% level = 3;
-% Errors = 0;
-
 if nargin > 5 && prac == 1
     config = readtable(fullfile("config_prac", "keeptrack_prac.xlsx"));
 else
@@ -139,7 +135,7 @@ try
             break
         end
         % save answer on rec
-        rec.cresp(trial) = cellstr(strjoin(arrayfun(@num2str, correctAnswer, 'UniformOutput', false), ',')); 
+        rec.cresp(trial) = cellstr(strjoin(arrayfun(@num2str, correctAnswer, 'UniformOutput', false), ','));
         while ~early_exit
             timeout = false;
             resp_timestamp = nan;
