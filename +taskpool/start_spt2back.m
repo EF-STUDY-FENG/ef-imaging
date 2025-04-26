@@ -3,7 +3,6 @@ function [rec, status, exception] = start_spt2back(run, start, rti, window_ptr, 
 % ---- configure exception ----
 status = 0;
 exception = [];
-% accu = 0.00;
 
 % ---- configure sequence ----
 p.nback = 2;
@@ -14,7 +13,7 @@ if nargin > 5 && prac == 1
     load ('config_prac/spt2back', 'x', 'y', 'squx', 'squy', 'ind');
     config = readtable(fullfile("config_prac", "spt2back_prac.xlsx"));
 else
-    loc_config = fullfile("config/spt2back", sprintf('run%d.mat', run));
+    loc_config = fullfile("stimuli/spt2back", sprintf('run%d.mat', run));
     load (loc_config, 'x', 'y', 'squx', 'squy', 'ind');
     TaskFile = sprintf('spt2back_run%d.xlsx', run);
     config = readtable(fullfile("config/spt2back", TaskFile));

@@ -11,8 +11,8 @@ else
     TaskFile = sprintf('stopsignal_run%d.xlsx', run);
     config = readtable(fullfile("config/stopsignal", TaskFile));
 end
+config.onset = config.onset + rti;
 rec = config;
-rec.onset = (rti:1.5:rti+1.5*(height(config)-1))';
 rec.onset_real = nan(height(config), 1);
 rec.trialend_real = nan(height(config), 1);
 rec.ssd = nan(height(config), 1);
@@ -67,7 +67,7 @@ try
         if early_exit
             break
         end
-        this_trial = rec(trial_order, :);
+        this_trial = config(trial_order, :);
 
         % ssd calculation
         if this_trial.type{:} == "go"

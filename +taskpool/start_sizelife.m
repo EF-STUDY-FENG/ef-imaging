@@ -22,7 +22,7 @@ timing = struct( ...
     'iti', 0.5, ... % inter-trial-interval
     'tdur', 2.5); % trial duration
 
-imageFolder = 'stimuli/sizelife_stimuli'; % figure folder
+imageFolder = 'stimuli/sizelife'; % figure folder
 
 % ---- keyboard settings ----
 keys = struct( ...

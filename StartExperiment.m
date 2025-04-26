@@ -96,7 +96,7 @@ try
     funcSeq = {'numlet', 'let3back', 'stroop', 'antisac', 'colshp', ...
         'spt2back', 'keeptrack', 'sizelife', 'stopsignal'};
     run_start = 0;
-    for idx = 3%1:length(n)
+    for idx = 8%1:length(n)
         [run_start, taskonset_timestamp] = instPlayed(funcSeq{n(idx)}, start_timestamp, window_ptr, run_start);
         rti = taskonset_timestamp - start_timestamp; % Run and Task Interval
         generalFunc(funcSeq{n(idx)}, run, start_timestamp, rti, subconfig, window_ptr, window_rect, outFolderPath);
@@ -141,7 +141,7 @@ try
         if run == 1
             [rec, out_ssd] = taskpool.start_stopsignal(run, start, rti, window_ptr, window_rect, []);
             % save ssd to next run
-            out_ssd_folder = sprintf('stimuli/%s_ssd/Sub%s', taskName, subconfig{1});
+            out_ssd_folder = sprintf('Results/%s_ssd/Sub%s', taskName, subconfig{1});
             if ~exist(out_ssd_folder, 'dir')
                 mkdir(fullfile(pwd, out_ssd_folder));
             end
@@ -149,11 +149,11 @@ try
             out_ssd_place = fullfile(out_ssd_folder, ssd_run);
             save(out_ssd_place, "out_ssd");
         else
-            init_ssd_place = sprintf('stimuli/%s_ssd/Sub%s/run%d.mat',taskName, subconfig{1}, run-1);
+            init_ssd_place = sprintf('Results/%s_ssd/Sub%s/run%d.mat',taskName, subconfig{1}, run-1);
             load(init_ssd_place, "out_ssd"); % load the previous saved ssd
             init_ssd = out_ssd;
             [rec, out_ssd] = taskpool.start_stopsignal(run, start, rti, window_ptr, window_rect, init_ssd);
-            out_ssd_place = sprintf('stimuli/%s_ssd/Sub%s/run%d.mat',taskName, subconfig{1}, run);
+            out_ssd_place = sprintf('Results/%s_ssd/Sub%s/run%d.mat',taskName, subconfig{1}, run);
             save(out_ssd_place, "out_ssd");
         end
     else
