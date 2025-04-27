@@ -1,2 +1,5 @@
 .MATLABDriveTag
 *.asv
+
+# temporary file created by excel
+~$*.xlsx
