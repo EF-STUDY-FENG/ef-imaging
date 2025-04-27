@@ -18,6 +18,7 @@ rec.trialend_real = nan(height(config), 1);
 rec.resp_raw = cell(height(config), 1);
 rec.resp = cell(height(config), 1);
 rec.rt = nan(height(config), 1);
+rec.cort = nan(height(config), 1);
 
 timing = struct(...
     'iti', 0.5, ...

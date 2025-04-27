@@ -26,7 +26,6 @@ rec.resp = cell(height(config), 1);
 rec.rt = nan(height(config), 1);
 rec.cort = nan(height(config), 1);
 
-
 timing = struct( ...
     'iti', 1.5, ... % inter-trial-interval
     'tdur', 0.5); % trial duration
