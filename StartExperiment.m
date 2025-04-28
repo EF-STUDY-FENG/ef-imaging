@@ -96,7 +96,7 @@ try
     funcSeq = {'numlet', 'let3back', 'stroop', 'antisac', 'colshp', ...
         'spt2back', 'keeptrack', 'sizelife', 'stopsignal'};
     run_start = 0;
-    for idx = 5%1:length(n)
+    for idx = 1:length(n)
         [run_start, taskonset_timestamp] = instPlayed(funcSeq{n(idx)}, start_timestamp, window_ptr, run_start);
         rti = taskonset_timestamp - start_timestamp; % Run and Task Interval
         generalFunc(funcSeq{n(idx)}, run, start_timestamp, rti, subconfig, window_ptr, window_rect, outFolderPath);
