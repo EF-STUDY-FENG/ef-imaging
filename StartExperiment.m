@@ -47,7 +47,8 @@ old_pri = Priority(MaxPriority(screen));
 % the flag to determine if the experiment should exit early
 keys = struct( ...
     'start', KbName('s'), ...
-    'exit', KbName('Escape'));
+    'exit', KbName('Escape'), ...
+    'allow', [KbName('1!'), KbName('2@'), KbName('3#'), KbName('4$')]);
 
 % ---- seq config ----
 config = readtable(fullfile("config/main_program", 'seq.xlsx'));
@@ -76,8 +77,10 @@ try
     [keyIsDown, ~, keyCode] = KbCheck;
     keyCode = find(keyCode, 1);
     if keyIsDown
-        ignoreKey = keyCode;
-        DisableKeysForKbCheck(ignoreKey);
+        if ~ismember(keyCode, [keys.start, keys.exit, keys.allow])
+            ignoreKey = keyCode;
+            DisableKeysForKbCheck(ignoreKey);
+        end        
     end
 
     while ~early_exit
