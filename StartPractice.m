@@ -31,17 +31,30 @@ old_text_render = Screen('Preference', 'TextRenderer', 1);
 old_pri = Priority(MaxPriority(screen));
 % PsychDebugWindowConfiguration([], 0.1);
 
-% ---- stimuli presentation ----
-% the flag to determine if the experiment should exit early
+% ---- keyboard config ----
+keys = struct( ...
+    'start', KbName('s'), ...
+    'exit', KbName('Escape'), ...
+    'allow', [KbName('1!'), KbName('2@'), KbName('3#'), KbName('4$')]);
 keys = struct( ...
     'start', KbName('s'), ...
     'exit', KbName('Escape'));
+% Solve stuck key issue
+% Reset the disabled keys to ensure no keys are ignored before configuring ignored keys
+DisableKeysForKbCheck([]);
+[~, ~, keyCode] = KbCheck; % Removed unused variable 'keyIsDown'
+keyCode = find(keyCode);
+ignoreKeys = setdiff(keyCode, [keys.start, keys.exit, keys.allow]);
+if ~isempty(ignoreKeys)
+    DisableKeysForKbCheck(ignoreKeys);
+end
 
 % ---- seq config ---- %
 config = readtable(fullfile("config/main_program", 'seq.xlsx'));
 n = str2num(strjoin(config.run(run)));
 
-%%
+% ---- stimuli presentation ----
+% the flag to determine if the experiment should exit early
 early_exit = false;
 try
     % open a window and set its background color as black
@@ -59,15 +72,6 @@ try
     % ---- start '+' display ---- %
     DrawFormattedText(window_ptr, '+', 'center', 'center', WhiteIndex(window_ptr));
     Screen('Flip', window_ptr);
-
-    % Solve Bug
-    [keyIsDown, ~, keyCode] = KbCheck;
-    keyCode = find(keyCode, 1);
-    if keyIsDown
-        ignoreKey = keyCode;
-        DisableKeysForKbCheck(ignoreKey);
-    end
-
     while ~early_exit
         % here we should detect for a key press and release
         [~, key_code] = KbStrokeWait(-1);
