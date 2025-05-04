@@ -42,7 +42,7 @@ keys = struct( ...
 % Solve stuck key issue
 % Reset the disabled keys to ensure no keys are ignored before configuring ignored keys
 DisableKeysForKbCheck([]);
-[~, ~, keyCode] = KbCheck; % Removed unused variable 'keyIsDown'
+[~, ~, keyCode] = KbCheck;
 keyCode = find(keyCode);
 ignoreKeys = setdiff(keyCode, [keys.start, keys.exit, keys.allow]);
 if ~isempty(ignoreKeys)
