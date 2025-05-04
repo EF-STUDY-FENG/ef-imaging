@@ -101,12 +101,6 @@ try
         offset_timestamp = nan;
 
         % now present stimuli and check user's response
-        [keyIsDown, ~, keyCode] = KbCheck;
-        keyCode = find(keyCode, 1);
-        if keyIsDown
-            ignoreKey = keyCode;
-            DisableKeysForKbCheck(ignoreKey);
-        end
         while ~early_exit
             [key_pressed, timestamp, key_code] = KbCheck(-1);
             if key_code(keys.exit)
