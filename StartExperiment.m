@@ -52,6 +52,7 @@ keys = struct( ...
     'start', KbName('s'), ...
     'exit', KbName('Escape'), ...
     'allow', [KbName('1!'), KbName('2@'), KbName('3#'), KbName('4$')]);
+
 % Solve stuck key issue
 % Reset the disabled keys to ensure no keys are ignored before configuring ignored keys
 DisableKeysForKbCheck([]);
@@ -102,15 +103,13 @@ try
     funcSeq = {'numlet', 'let3back', 'stroop', 'antisac', 'colshp', ...
         'spt2back', 'keeptrack', 'sizelife', 'stopsignal'};
     run_start = 0;
-    while ~early_exit
-        for idx = 1:length(n)
-            if early_exit
-                break
-            end
-            [run_start, taskonset_timestamp] = instPlayed(funcSeq{n(idx)}, start_timestamp, window_ptr, run_start);
-            rti = taskonset_timestamp - start_timestamp; % Run and Task Interval
-            early_exit = generalFunc(funcSeq{n(idx)}, run, start_timestamp, rti, subconfig, window_ptr, window_rect, outFolderPath);
+    for idx = 1:length(n)
+        if early_exit
+            break
         end
+        [run_start, taskonset_timestamp] = instPlayed(funcSeq{n(idx)}, start_timestamp, window_ptr, run_start);
+        rti = taskonset_timestamp - start_timestamp; % Run and Task Interval
+        early_exit = generalFunc(funcSeq{n(idx)}, run, start_timestamp, rti, subconfig, window_ptr, window_rect, outFolderPath);
     end
 
     % ---- END Inst Display ---- %
@@ -120,7 +119,6 @@ try
     DrawFormattedText(window_ptr, double('请闭眼等待'), 'center', 'center', WhiteIndex(window_ptr));
     Screen('Flip', window_ptr);   % show stim, return flip time
     WaitSecs(3);
-
 
 catch exception
     status = -1;
