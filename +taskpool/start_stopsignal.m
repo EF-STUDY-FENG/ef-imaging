@@ -1,4 +1,4 @@
-function [rec, out_ssd, status, exception] = start_stopsignal(run, start, rti, window_ptr, window_rect, init_ssd, prac)
+function [rec, early_exit, out_ssd, status, exception] = start_stopsignal(run, start, rti, window_ptr, window_rect, init_ssd, prac)
 
 % ---- configure exception ----
 status = 0;

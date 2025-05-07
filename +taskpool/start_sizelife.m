@@ -1,4 +1,4 @@
-function [rec, status, exception] = start_sizelife(run, start, rti, window_ptr, window_rect, prac)
+function [rec, early_exit, status, exception] = start_sizelife(run, start, rti, window_ptr, window_rect, prac)
 
 % ---- configure exception ----
 status = 0;
