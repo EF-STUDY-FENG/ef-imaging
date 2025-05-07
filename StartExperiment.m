@@ -6,7 +6,7 @@ num_lines = 1;
 temp_file = fullfile(tempdir, 'sub_id_temp.mat');
 if exist(temp_file, 'file')
     load(temp_file, 'subconfig');
-    run_num = str2double(subcosnfig{2}) + 1;
+    run_num = str2double(subconfig{2}) + 1;
     definput = [subconfig{1}, {num2str(run_num)}];
 else
     % For the first run, all parameters are set to empty by default
@@ -17,7 +17,7 @@ subconfig = inputdlg(prompt,dlgtitle, num_lines, definput);
 
 % save the parameters to the temp
 save(temp_file, 'subconfig');
-if run_num == 5
+if run_num == 6
     delete(fullfile(tempdir, 'sub_id_temp.mat'));
 end
 
