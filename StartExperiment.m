@@ -20,9 +20,6 @@ save(temp_file, 'subconfig');
 if run_num == 5
     delete(fullfile(tempdir, 'sub_id_temp.mat'));
 end
-% if ~evalin('base', 'exist(''savedParams'', ''var'')')
-%     assignin('base', 'savedParams', subconfig(1));
-% end
 
 outFolderName = 'Results';
 outFolderPath = fullfile(pwd, outFolderName);
