@@ -17,9 +17,6 @@ subconfig = inputdlg(prompt,dlgtitle, num_lines, definput);
 
 % save the parameters to the temp
 save(temp_file, 'subconfig');
-if run_num == 6
-    delete(fullfile(tempdir, 'sub_id_temp.mat'));
-end
 
 outFolderName = 'Results';
 outFolderPath = fullfile(pwd, outFolderName);
@@ -136,6 +133,10 @@ Screen('Preference', 'VisualDebugLevel', old_visdb);
 Screen('Preference', 'SkipSyncTests', old_sync);
 Screen('Preference', 'TextRenderer', old_text_render);
 Priority(old_pri);
+
+if run_num >= 5 % no need to recover subject info now
+    delete(temp_file);
+end
 
 if ~isempty(exception)
     rethrow(exception)
