@@ -3,18 +3,22 @@ prompt = {'SubID:', 'Run:'};
 dlgtitle = 'sub-config';
 num_lines = 1;
 % Check whether there are saved parameters
-if evalin('base', 'exist(''savedParams'', ''var'')')
-    savedParams = evalin('base', 'savedParams');
-    definput = [savedParams(1), {''}];
+temp_file = fullfile(tempdir, 'sub_id_temp.mat');
+if exist(temp_file, 'file')
+    load(temp_file, 'subconfig');
+    run_num = str2double(subconfig{2}) + 1;
+    definput = [subconfig{1}, {num2str(run_num)}];
 else
     % For the first run, all parameters are set to empty by default
-    definput = {'', ''};
+    run_num = 1;
+    definput = [{''}, {num2str(run_num)}];
 end
 subconfig = inputdlg(prompt,dlgtitle, num_lines, definput);
 
-% If it is the first run, save the first three parameters to the base workspace
-if ~evalin('base', 'exist(''savedParams'', ''var'')')
-    assignin('base', 'savedParams', subconfig(1));
+% save the parameters to the temp
+save(temp_file, 'subconfig');
+if run_num == 6
+    delete(fullfile(tempdir, 'sub_id_temp.mat'));
 end
 
 outFolderName = 'Results';
@@ -48,6 +52,7 @@ keys = struct( ...
     'start', KbName('s'), ...
     'exit', KbName('Escape'), ...
     'allow', [KbName('1!'), KbName('2@'), KbName('3#'), KbName('4$')]);
+
 % Solve stuck key issue
 % Reset the disabled keys to ensure no keys are ignored before configuring ignored keys
 DisableKeysForKbCheck([]);
@@ -99,9 +104,12 @@ try
         'spt2back', 'keeptrack', 'sizelife', 'stopsignal'};
     run_start = 0;
     for idx = 1:length(n)
+        if early_exit
+            break
+        end
         [run_start, taskonset_timestamp] = instPlayed(funcSeq{n(idx)}, start_timestamp, window_ptr, run_start);
         rti = taskonset_timestamp - start_timestamp; % Run and Task Interval
-        generalFunc(funcSeq{n(idx)}, run, start_timestamp, rti, subconfig, window_ptr, window_rect, outFolderPath);
+        early_exit = generalFunc(funcSeq{n(idx)}, run, start_timestamp, rti, subconfig, window_ptr, window_rect, outFolderPath);
     end
 
     % ---- END Inst Display ---- %
@@ -111,7 +119,6 @@ try
     DrawFormattedText(window_ptr, double('请闭眼等待'), 'center', 'center', WhiteIndex(window_ptr));
     Screen('Flip', window_ptr);   % show stim, return flip time
     WaitSecs(3);
-
 
 catch exception
     status = -1;
@@ -135,13 +142,13 @@ if ~isempty(exception)
 end
 
 %% ---- Call Each Task Function ---- %%
-function generalFunc(taskName, run, start, rti, subconfig, window_ptr, window_rect, outFolderPath)
+function early_exit = generalFunc(taskName, run, start, rti, subconfig, window_ptr, window_rect, outFolderPath)
 funcName = ['start_', taskName];
 try
     if strcmp(funcName, 'start_stopsignal')
         % Handle stopsignal task
         if run == 1
-            [rec, out_ssd] = taskpool.start_stopsignal(run, start, rti, window_ptr, window_rect, []);
+            [rec, out_ssd, early_exit] = taskpool.start_stopsignal(run, start, rti, window_ptr, window_rect, []);
             % save ssd to next run
             out_ssd_folder = sprintf('Results/%s_ssd/Sub%s', taskName, subconfig{1});
             if ~exist(out_ssd_folder, 'dir')
@@ -154,13 +161,13 @@ try
             init_ssd_place = sprintf('Results/%s_ssd/Sub%s/run%d.mat',taskName, subconfig{1}, run-1);
             load(init_ssd_place, "out_ssd"); % load the previous saved ssd
             init_ssd = out_ssd;
-            [rec, out_ssd] = taskpool.start_stopsignal(run, start, rti, window_ptr, window_rect, init_ssd);
+            [rec, out_ssd, early_exit] = taskpool.start_stopsignal(run, start, rti, window_ptr, window_rect, init_ssd);
             out_ssd_place = sprintf('Results/%s_ssd/Sub%s/run%d.mat',taskName, subconfig{1}, run);
             save(out_ssd_place, "out_ssd");
         end
     else
         % Call other tasks normally
-        rec = taskpool.(funcName)(run, start, rti, window_ptr, window_rect);
+        [rec, early_exit] = taskpool.(funcName)(run, start, rti, window_ptr, window_rect);
     end
     save_task_data(taskName, rec, subconfig, outFolderPath);
 catch ME

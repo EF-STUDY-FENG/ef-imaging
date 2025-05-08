@@ -1,4 +1,4 @@
-function [rec, status, exception] = start_numlet(run, start, rti, window_ptr, window_rect, prac)
+function [rec, early_exit, status, exception] = start_numlet(run, start, rti, window_ptr, window_rect, prac)
 
 % ---- configure exception ----
 status = 0;
@@ -43,7 +43,7 @@ try
     % % ---- configure stimuli ----
     ratio_size = 0.3;
     squareWidth = 0.13;
-    squareHeight = 0.09
+    squareHeight = 0.09;
     stim_window = [0, 0, RectWidth(window_rect), ratio_size * RectHeight(window_rect)];
     SquareFig = [0 0 squareWidth*RectWidth(window_rect) squareHeight*RectHeight(window_rect)];
 
