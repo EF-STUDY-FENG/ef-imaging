@@ -17,7 +17,7 @@ subconfig = inputdlg(prompt,dlgtitle, num_lines, definput);
 
 % save the parameters to the temp
 save(temp_file, 'subconfig');
-if run_num == 6
+if run_num == 5
     delete(fullfile(tempdir, 'sub_id_temp.mat'));
 end
 
